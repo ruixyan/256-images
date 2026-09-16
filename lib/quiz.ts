@@ -52,9 +52,9 @@ export type CollectionSummary = {
   artist: FieldBreakdown;
 };
 
-function tally(
-  images: ImageInput[],
-  get: (i: ImageInput) => string | null | undefined
+function tally<T extends ImageInput>(
+  images: T[],
+  get: (i: T) => string | null | undefined
 ): FieldBreakdown {
   const counts = new Map<string, number>();
   for (const img of images) {
@@ -67,8 +67,8 @@ function tally(
     .sort((a, b) => b.count - a.count);
 }
 
-export function summarizeCollection(
-  images: (ImageInput & { artist?: string | null })[]
+export function summarizeCollection<T extends ImageInput & { artist?: string | null }>(
+  images: T[]
 ): CollectionSummary {
   return {
     total: images.length,
