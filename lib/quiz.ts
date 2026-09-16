@@ -40,8 +40,6 @@ export function pickSimilarNine(pool: ImageInput[], basis: ImageInput[], count =
   return scored.slice(0, count).map((s) => s.img);
 }
 
-// lib/quiz.ts — add alongside the existing exports
-
 export type FieldBreakdown = { value: string; count: number }[];
 
 export type CollectionSummary = {
@@ -78,8 +76,6 @@ export function summarizeCollection<T extends ImageInput & { artist?: string | n
     artist: tally(images, (i) => i.artist),
   };
 }
-
-// lib/quiz.ts — add alongside the existing exports
 
 export type FilterField = "color" | "medium" | "subject" | "artist";
 
