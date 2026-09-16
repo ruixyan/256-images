@@ -23,6 +23,7 @@ type Phase = "intro" | "playing" | "finished";
 
 export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
   const [phase, setPhase] = useState<Phase>("intro");
+  const totalImages = images.length;
 
   const initial = useMemo(() => {
     const round = pickStartingNine(images, 9) as QuizImage[];
@@ -43,6 +44,14 @@ export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
   const [filters, setFilters] = useState<CollectionFilters>(emptyFilters());
 
   const hovered = currentRound.find((img) => img.id === hoveredId) ?? null;
+
+  // How many of the total images have been shown so far, across every
+  // completed round plus the round currently on screen.
+  const seenCount = Math.min(
+    totalImages,
+    totalImages - pool.length
+  );
+  const progressPct = totalImages > 0 ? Math.round((seenCount / totalImages) * 100) : 0;
 
   function toggle(id: string) {
     setSelected((prev) => {
@@ -248,6 +257,20 @@ export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
             Choose any images you'd like to keep. Whatever you don't pick this round won't come back —
             the next round is built from what you choose now.
           </p>
+
+          <div className="mb-6">
+            <div className="flex justify-between text-xs text-gray-400 mb-1.5">
+              <span>{seenCount} of {totalImages} seen</span>
+              <span>{progressPct}%</span>
+            </div>
+            <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-green-600 rounded-full transition-all duration-500 ease-out"
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
+          </div>
+
           <p className="text-xs text-gray-400">{selected.size} selected this round</p>
           <p className="text-xs text-gray-400">{collection.length} kept so far</p>
           <p className="text-xs text-gray-400">{pool.length} remaining after this round</p>
@@ -258,7 +281,7 @@ export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
             <img
               src={hovered.url}
               alt={hovered.title ?? ""}
-              className="w-full max-h-56 object-contain mb-3 border bg-gray-50"
+              className="w-full max-h-56 object-contain mb-3 border border-gray-700"
             />
             <p className="text-sm font-medium leading-snug">{hovered.title || "Untitled"}</p>
             {metaLine2 && <p className="text-xs text-gray-500 leading-snug">{metaLine2}</p>}
@@ -283,7 +306,7 @@ export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
             onMouseEnter={() => setHoveredId(img.id)}
             onMouseLeave={() => setHoveredId((cur) => (cur === img.id ? null : cur))}
             className={`relative overflow-hidden text-left border-2 ${
-              selected.has(img.id) ? "border-black" : "border-transparent"
+              selected.has(img.id) ? "border-green-600" : "border-transparent"
             }`}
           >
             <img

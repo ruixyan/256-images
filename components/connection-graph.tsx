@@ -34,7 +34,6 @@ export default function ConnectionGraph({
       groupRef.current.style.transform = `translate(${v.x}px, ${v.y}px) scale(${v.scale})`;
     }
   }
-
   function scheduleTransformUpdate() {
     if (rafId.current != null) return;
     rafId.current = requestAnimationFrame(() => {
@@ -54,9 +53,6 @@ export default function ConnectionGraph({
     });
   }
 
-  // Memoized so a hover-only state change doesn't rebuild these on every
-  // enter/leave — they only need to recompute when the actual graph data or
-  // the type filters change.
   const nodeById = useMemo(() => new Map(nodes.map((n) => [n.id, n])), [nodes]);
   const visibleEdges = useMemo(
     () => edges.filter((e) => visibleTypes.has(e.type)),
@@ -98,8 +94,6 @@ export default function ConnectionGraph({
     e.preventDefault();
     const v = currentView.current;
     dragState.current = { startX: e.clientX, startY: e.clientY, viewX: v.x, viewY: v.y };
-    // Dropping any hover highlight the moment a drag starts avoids firing
-    // setHovered repeatedly as the cursor sweeps over nodes mid-drag.
     setHovered(null);
   }
 
@@ -122,10 +116,6 @@ export default function ConnectionGraph({
     applyTransform();
   }
 
-  // While actively dragging, hover changes are ignored entirely — this is
-  // the main fix: it stops the mass of enter/leave events a fast drag
-  // generates over a dense field of thumbnails from each triggering a
-  // full re-render.
   function handleNodeEnter(id: string) {
     if (dragState.current) return;
     setHovered(id);
@@ -136,7 +126,7 @@ export default function ConnectionGraph({
   }
 
   return (
-    <div className="w-full h-full flex flex-col">
+    <div className="w-full h-full flex flex-col pt-14">
       <div className="flex gap-4 px-4 py-2 text-xs items-center border-b shrink-0">
         {(["color", "medium", "subject"] as const).map((type) => (
           <label key={type} className="flex items-center gap-1.5">
@@ -150,76 +140,78 @@ export default function ConnectionGraph({
         </button>
       </div>
 
-      <svg
-        ref={svgRef}
-        viewBox={`0 0 ${width} ${height}`}
-        className="w-full flex-1 bg-gray-50 cursor-grab active:cursor-grabbing"
-        onWheel={handleWheel}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={stopDrag}
-        onMouseLeave={stopDrag}
-        onDragStart={(e) => e.preventDefault()}
-      >
-        <g ref={groupRef} style={{ willChange: "transform" }}>
-          {visibleEdges.map((e, i) => {
-            const a = nodeById.get(e.source), b = nodeById.get(e.target);
-            if (!a || !b) return null;
-            const isHighlighted = !!hovered && (e.source === hovered || e.target === hovered);
-            return (
-              <line
-                key={i} x1={a.x} y1={a.y} x2={b.x} y2={b.y}
-                stroke={EDGE_COLORS[e.type]}
-                strokeWidth={isHighlighted ? 2 : 0.7}
-                strokeOpacity={hovered ? (isHighlighted ? 0.9 : 0.05) : 0.35}
-                vectorEffect="non-scaling-stroke"
-              />
-            );
-          })}
-
-          {hubNodes.map((node) => {
-            if (node.kind !== "hub" || !visibleTypes.has(node.type)) return null;
-            const r = node.r - 14;
-            const dimmed = !!hovered && hovered !== node.id && !connectedIds.has(node.id);
-            return (
-              <g
-                key={node.id}
-                transform={`translate(${node.x}, ${node.y})`}
-                onMouseEnter={() => handleNodeEnter(node.id)}
-                onMouseLeave={handleNodeLeave}
-                style={{ cursor: "pointer", opacity: dimmed ? 0.2 : 1 }}
-              >
-                <circle r={r} fill={EDGE_COLORS[node.type]} fillOpacity={0.2} stroke={EDGE_COLORS[node.type]} strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
-                <text y={-r - 6} textAnchor="middle" fontSize={10} fill="#555" fontFamily="ui-monospace, monospace">
-                  {node.label}
-                </text>
-              </g>
-            );
-          })}
-
-          {imageNodes.map((node) => {
-            if (node.kind !== "image") return null;
-            const size = IMG_MAX_DIM;
-            const dimmed = !!hovered && hovered !== node.id && !connectedIds.has(node.id);
-            return (
-              <g
-                key={node.id}
-                transform={`translate(${node.x}, ${node.y})`}
-                onMouseEnter={() => handleNodeEnter(node.id)}
-                onMouseLeave={handleNodeLeave}
-                style={{ cursor: "pointer", opacity: dimmed ? 0.25 : 1 }}
-              >
-                <image
-                  href={node.url}
-                  x={-size / 2} y={-size / 2} width={size} height={size}
-                  preserveAspectRatio="xMidYMid slice"
+      <div className="flex-1 min-h-0">
+        <svg
+          ref={svgRef}
+          viewBox={`0 0 ${width} ${height}`}
+          className="w-full h-full bg-gray-50 cursor-grab active:cursor-grabbing"
+          onWheel={handleWheel}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={stopDrag}
+          onMouseLeave={stopDrag}
+          onDragStart={(e) => e.preventDefault()}
+        >
+          <g ref={groupRef} style={{ willChange: "transform" }}>
+            {visibleEdges.map((e, i) => {
+              const a = nodeById.get(e.source), b = nodeById.get(e.target);
+              if (!a || !b) return null;
+              const isHighlighted = !!hovered && (e.source === hovered || e.target === hovered);
+              return (
+                <line
+                  key={i} x1={a.x} y1={a.y} x2={b.x} y2={b.y}
+                  stroke={EDGE_COLORS[e.type]}
+                  strokeWidth={isHighlighted ? 2 : 0.7}
+                  strokeOpacity={hovered ? (isHighlighted ? 0.9 : 0.05) : 0.3}
+                  vectorEffect="non-scaling-stroke"
                 />
-                <rect x={-size / 2} y={-size / 2} width={size} height={size} fill="none" stroke="#fff" strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
-              </g>
-            );
-          })}
-        </g>
-      </svg>
+              );
+            })}
+
+            {hubNodes.map((node) => {
+              if (node.kind !== "hub" || !visibleTypes.has(node.type)) return null;
+              const r = node.r - 14;
+              const dimmed = !!hovered && hovered !== node.id && !connectedIds.has(node.id);
+              return (
+                <g
+                  key={node.id}
+                  transform={`translate(${node.x}, ${node.y})`}
+                  onMouseEnter={() => handleNodeEnter(node.id)}
+                  onMouseLeave={handleNodeLeave}
+                  style={{ cursor: "pointer", opacity: dimmed ? 0.2 : 1 }}
+                >
+                  <circle r={r} fill={EDGE_COLORS[node.type]} fillOpacity={0.2} stroke={EDGE_COLORS[node.type]} strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
+                  <text y={-r - 6} textAnchor="middle" fontSize={10} fill="#555" fontFamily="ui-monospace, monospace">
+                    {node.label}
+                  </text>
+                </g>
+              );
+            })}
+
+            {imageNodes.map((node) => {
+              if (node.kind !== "image") return null;
+              const size = IMG_MAX_DIM;
+              const dimmed = !!hovered && hovered !== node.id && !connectedIds.has(node.id);
+              return (
+                <g
+                  key={node.id}
+                  transform={`translate(${node.x}, ${node.y})`}
+                  onMouseEnter={() => handleNodeEnter(node.id)}
+                  onMouseLeave={handleNodeLeave}
+                  style={{ cursor: "pointer", opacity: dimmed ? 0.25 : 1 }}
+                >
+                  <image
+                    href={node.url}
+                    x={-size / 2} y={-size / 2} width={size} height={size}
+                    preserveAspectRatio="xMidYMid slice"
+                  />
+                  <rect x={-size / 2} y={-size / 2} width={size} height={size} fill="none" stroke="#fff" strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
+                </g>
+              );
+            })}
+          </g>
+        </svg>
+      </div>
     </div>
   );
 }

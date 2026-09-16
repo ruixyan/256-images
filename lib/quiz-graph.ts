@@ -42,6 +42,16 @@ export type StoredQuizImage = {
     }
   }
   
+  // A quiz is only "finished" once it's reached the round where the image
+  // pool ran out — that final round is always saved with an empty basisIds
+  // (there's no next round to build), which is the same signal already used
+  // elsewhere, so this needs no extra field to track separately.
+  export function isQuizCompleted(session: QuizSession | null): boolean {
+    if (!session || session.rounds.length === 0) return false;
+    const last = session.rounds[session.rounds.length - 1];
+    return last.basisIds.length === 0;
+  }
+  
   export type QuizNode = StoredQuizImage & {
     round: number;
     chosen: boolean;
@@ -103,10 +113,6 @@ export type StoredQuizImage = {
     return { nodes, edges, width, height };
   }
   
-  // Explains why an edge exists: which fields the two endpoint images share.
-  // This is a real, literal answer — pickSimilarNine scores candidates by
-  // exactly this count of shared color/medium/subject matches against the
-  // chosen "basis" images, so this is the actual mechanism, not a guess.
   export function sharedFields(a: QuizNode, b: QuizNode): { field: string; value: string }[] {
     const shared: { field: string; value: string }[] = [];
     if (a.color && b.color && a.color.trim().toLowerCase() === b.color.trim().toLowerCase()) {
