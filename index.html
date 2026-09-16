@@ -1,0 +1,973 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Six Image Selector</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    html,
+    body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #111;
+        color: white;
+        font-family: Arial, Helvetica, sans-serif;
+    }
+
+    #app {
+        width: 100vw;
+        height: 100vh;
+        position: relative;
+    }
+
+    /* -----------------------------
+       TOP UI
+    ----------------------------- */
+
+    .progress {
+        position: absolute;
+        top: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 20;
+
+        font-size: 13px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        opacity: 0.55;
+    }
+
+    /* -----------------------------
+       IMAGE STAGE
+    ----------------------------- */
+
+    .stage {
+        position: absolute;
+        inset: 0;
+
+        display: grid;
+        place-items: center;
+    }
+
+    .selector {
+        width: min(900px, 90vw);
+        height: min(700px, 85vh);
+
+        position: relative;
+    }
+
+    /* -----------------------------
+       IMAGES
+    ----------------------------- */
+
+    .choice {
+        position: absolute;
+
+        width: 150px;
+        aspect-ratio: 1 / 1;
+
+        border-radius: 8px;
+        overflow: hidden;
+
+        cursor: pointer;
+
+        transition:
+            transform 180ms ease,
+            opacity 180ms ease,
+            box-shadow 180ms ease;
+
+        opacity: 0.65;
+    }
+
+    .choice img {
+        width: 100%;
+        height: 100%;
+
+        object-fit: cover;
+        display: block;
+    }
+
+    .choice:hover {
+        opacity: 0.9;
+        transform: scale(1.04);
+    }
+
+    /* highlighted choice */
+
+    .choice.selected {
+        opacity: 1;
+
+        transform: scale(1.08);
+
+        box-shadow:
+            0 0 0 2px white,
+            0 0 35px rgba(255,255,255,0.25);
+    }
+
+    /* -----------------------------
+       CURRENT IMAGE
+    ----------------------------- */
+
+    .current {
+        position: absolute;
+
+        left: 50%;
+        top: 50%;
+
+        transform: translate(-50%, -50%);
+
+        width: 270px;
+        aspect-ratio: 1 / 1;
+
+        border-radius: 10px;
+
+        overflow: hidden;
+
+        box-shadow:
+            0 20px 60px rgba(0,0,0,0.5);
+
+        z-index: 5;
+    }
+
+    .current img {
+        width: 100%;
+        height: 100%;
+
+        display: block;
+        object-fit: cover;
+    }
+
+    /* -----------------------------
+       SIX POSITIONS
+    ----------------------------- */
+
+    .position-0 {
+        left: 50%;
+        top: 4%;
+
+        transform: translateX(-50%);
+    }
+
+    .position-1 {
+        left: 4%;
+        top: 25%;
+    }
+
+    .position-2 {
+        right: 4%;
+        top: 25%;
+    }
+
+    .position-3 {
+        left: 4%;
+        bottom: 12%;
+    }
+
+    .position-4 {
+        right: 4%;
+        bottom: 12%;
+    }
+
+    .position-5 {
+        left: 50%;
+        bottom: 0;
+
+        transform: translateX(-50%);
+    }
+
+    .position-0.selected,
+    .position-5.selected {
+        transform: translateX(-50%) scale(1.08);
+    }
+
+    /* -----------------------------
+       INSTRUCTIONS
+    ----------------------------- */
+
+    .instructions {
+        position: absolute;
+
+        bottom: 24px;
+        left: 50%;
+
+        transform: translateX(-50%);
+
+        z-index: 20;
+
+        font-size: 12px;
+        letter-spacing: 0.08em;
+
+        opacity: 0.4;
+
+        white-space: nowrap;
+    }
+
+    /* -----------------------------
+       FINISHED
+    ----------------------------- */
+
+    .finished {
+        position: absolute;
+        inset: 0;
+
+        display: none;
+
+        align-items: center;
+        justify-content: center;
+
+        background: #111;
+
+        z-index: 100;
+    }
+
+    .finished.visible {
+        display: flex;
+    }
+
+    .finished-content {
+        text-align: center;
+    }
+
+    .finished h1 {
+        font-size: 40px;
+        font-weight: 400;
+        margin-bottom: 12px;
+    }
+
+    .finished p {
+        opacity: 0.5;
+    }
+
+    @media (max-width: 700px) {
+
+        .selector {
+            width: 100vw;
+            height: 80vh;
+        }
+
+        .choice {
+            width: 100px;
+        }
+
+        .current {
+            width: 190px;
+        }
+
+        .position-1,
+        .position-2 {
+            top: 20%;
+        }
+
+        .position-3,
+        .position-4 {
+            bottom: 15%;
+        }
+    }
+</style>
+</head>
+
+<body>
+
+<div id="app">
+
+    <div class="progress">
+        <span id="progressText">1 / 100</span>
+    </div>
+
+    <div class="stage">
+
+        <div class="selector" id="selector">
+
+            <!-- SIX CHOICES -->
+
+            <div class="choice position-0" data-slot="0">
+                <img>
+            </div>
+
+            <div class="choice position-1" data-slot="1">
+                <img>
+            </div>
+
+            <div class="choice position-2" data-slot="2">
+                <img>
+            </div>
+
+            <div class="choice position-3" data-slot="3">
+                <img>
+            </div>
+
+            <div class="choice position-4" data-slot="4">
+                <img>
+            </div>
+
+            <div class="choice position-5" data-slot="5">
+                <img>
+            </div>
+
+            <!-- CURRENT IMAGE -->
+
+            <div class="current">
+                <img id="currentImage">
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="instructions">
+        ARROW KEYS TO CHOOSE · ENTER TO SELECT
+    </div>
+
+    <div class="finished" id="finished">
+
+        <div class="finished-content">
+
+            <h1>Complete</h1>
+
+            <p>
+                You viewed all 100 images.
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   IMAGE DATA
+========================================================= */
+
+/*
+    Replace these with your real images.
+
+    Each image has:
+
+    id
+    image URL
+    rankA
+    rankB
+    rankC
+
+    The rankings are deliberately different in this example.
+*/
+
+const images = [];
+
+for (let i = 0; i < 100; i++) {
+
+    images.push({
+        id: i,
+
+        image:
+            `https://picsum.photos/seed/image-${i}/600/600`,
+
+        rankA: i + 1,
+
+        // Example alternate rankings
+        rankB: ((i * 37) % 100) + 1,
+        rankC: ((i * 61) % 100) + 1
+    });
+
+}
+
+
+/* =========================================================
+   STATE
+========================================================= */
+
+let currentId = 0;
+
+let viewed = new Set();
+
+let selectedSlot = 0;
+
+let choices = [];
+
+
+/* =========================================================
+   RANKING HELPERS
+========================================================= */
+
+const rankings = [
+    "rankA",
+    "rankB",
+    "rankC"
+];
+
+
+/*
+    Return the image immediately above/below
+    the current image in a ranking.
+
+    If that image has already been viewed,
+    keep moving outward until an unseen image
+    is found.
+*/
+
+function findNearestUnseen(current, ranking, direction) {
+
+    const currentRank = current[ranking];
+
+    let distance = 1;
+
+    while (true) {
+
+        const targetRank =
+            currentRank + (distance * direction);
+
+        // End of ranking
+        if (targetRank < 1 || targetRank > 100) {
+            return null;
+        }
+
+        const candidate =
+            images.find(
+                image => image[ranking] === targetRank
+            );
+
+        if (!candidate) {
+            return null;
+        }
+
+        if (!viewed.has(candidate.id)) {
+            return candidate;
+        }
+
+        distance++;
+    }
+}
+
+
+/* =========================================================
+   GENERATE SIX CHOICES
+========================================================= */
+
+function generateChoices() {
+
+    const current =
+        images.find(image => image.id === currentId);
+
+    const newChoices = [];
+
+    /*
+        Category A
+        Above / Below
+    */
+
+    newChoices.push(
+        findNearestUnseen(current, "rankA", 1)
+    );
+
+    newChoices.push(
+        findNearestUnseen(current, "rankA", -1)
+    );
+
+
+    /*
+        Category B
+        Above / Below
+    */
+
+    newChoices.push(
+        findNearestUnseen(current, "rankB", 1)
+    );
+
+    newChoices.push(
+        findNearestUnseen(current, "rankB", -1)
+    );
+
+
+    /*
+        Category C
+        Above / Below
+    */
+
+    newChoices.push(
+        findNearestUnseen(current, "rankC", 1)
+    );
+
+    newChoices.push(
+        findNearestUnseen(current, "rankC", -1)
+    );
+
+
+    /*
+        Remove duplicates.
+
+        It's possible for two ranking paths
+        to eventually point to the same image.
+    */
+
+    const unique = [];
+
+    for (const choice of newChoices) {
+
+        if (!choice) continue;
+
+        if (
+            choice.id === currentId
+        ) continue;
+
+        if (
+            unique.some(
+                item => item.id === choice.id
+            )
+        ) {
+            continue;
+        }
+
+        unique.push(choice);
+    }
+
+
+    /*
+        If we have fewer than six choices,
+        fill the remaining positions with
+        the nearest unseen images overall.
+
+        This guarantees that the user can
+        eventually see all 100 images.
+    */
+
+    if (unique.length < 6) {
+
+        for (const image of images) {
+
+            if (unique.length >= 6) {
+                break;
+            }
+
+            if (viewed.has(image.id)) {
+                continue;
+            }
+
+            if (image.id === currentId) {
+                continue;
+            }
+
+            if (
+                unique.some(
+                    item => item.id === image.id
+                )
+            ) {
+                continue;
+            }
+
+            unique.push(image);
+        }
+    }
+
+
+    choices = unique.slice(0, 6);
+
+    selectedSlot = 0;
+
+    render();
+}
+
+
+/* =========================================================
+   RENDER
+========================================================= */
+
+function render() {
+
+    const current =
+        images.find(
+            image => image.id === currentId
+        );
+
+    /*
+        Current image
+    */
+
+    document
+        .getElementById("currentImage")
+        .src = current.image;
+
+
+    /*
+        Progress
+    */
+
+    document
+        .getElementById("progressText")
+        .textContent =
+            `${viewed.size + 1} / ${images.length}`;
+
+
+    /*
+        Choice images
+    */
+
+    const elements =
+        document.querySelectorAll(".choice");
+
+
+    elements.forEach((element, index) => {
+
+        const choice = choices[index];
+
+        if (!choice) {
+
+            element.style.display = "none";
+
+            return;
+        }
+
+        element.style.display = "block";
+
+        const image =
+            element.querySelector("img");
+
+        image.src = choice.image;
+
+        element.classList.toggle(
+            "selected",
+            index === selectedSlot
+        );
+
+    });
+}
+
+
+/* =========================================================
+   MOVE HIGHLIGHT
+========================================================= */
+
+function moveSelection(direction) {
+
+    /*
+        Spatial keyboard navigation.
+
+        Slots:
+
+                  0
+
+              1       2
+
+              3       4
+
+                  5
+    */
+
+    const map = {
+
+        ArrowUp: {
+            0: 0,
+            1: 0,
+            2: 0,
+            3: 1,
+            4: 2,
+            5: 3
+        },
+
+        ArrowDown: {
+            0: 1,
+            1: 3,
+            2: 4,
+            3: 5,
+            4: 5,
+            5: 5
+        },
+
+        ArrowLeft: {
+            0: 1,
+            1: 1,
+            2: 1,
+            3: 3,
+            4: 3,
+            5: 3
+        },
+
+        ArrowRight: {
+            0: 2,
+            1: 2,
+            2: 2,
+            3: 4,
+            4: 4,
+            5: 4
+        }
+
+    };
+
+    const target =
+        map[direction]?.[selectedSlot];
+
+    if (
+        target !== undefined &&
+        choices[target]
+    ) {
+        selectedSlot = target;
+
+        render();
+    }
+}
+
+
+/* =========================================================
+   SELECT IMAGE
+========================================================= */
+
+function selectCurrentChoice() {
+
+    const selected =
+        choices[selectedSlot];
+
+    if (!selected) {
+        return;
+    }
+
+
+    /*
+        Record the choice.
+    */
+
+    viewed.add(selected.id);
+
+
+    /*
+        Store behavioral information.
+
+        This is where your personality
+        scoring system can eventually go.
+    */
+
+    recordChoice(
+        images.find(
+            image => image.id === currentId
+        ),
+        selected
+    );
+
+
+    /*
+        Move to selected image.
+    */
+
+    currentId = selected.id;
+
+
+    /*
+        Have we finished?
+    */
+
+    if (viewed.size >= images.length - 1) {
+
+        finish();
+
+        return;
+    }
+
+
+    /*
+        Generate the next six choices.
+    */
+
+    generateChoices();
+}
+
+
+/* =========================================================
+   PERSONALITY DATA
+========================================================= */
+
+const journey = [];
+
+
+/*
+    Every selection can be recorded.
+
+    This is potentially more interesting
+    than simply scoring the selected image.
+*/
+
+function recordChoice(from, to) {
+
+    const movement = {
+
+        from: from.id,
+
+        to: to.id,
+
+        /*
+            Did the player move upward
+            or downward in each ranking?
+        */
+
+        rankA:
+            to.rankA - from.rankA,
+
+        rankB:
+            to.rankB - from.rankB,
+
+        rankC:
+            to.rankC - from.rankC,
+
+        /*
+            Which rankings changed?
+        */
+
+        categoryDistances: {
+
+            A: Math.abs(
+                to.rankA - from.rankA
+            ),
+
+            B: Math.abs(
+                to.rankB - from.rankB
+            ),
+
+            C: Math.abs(
+                to.rankC - from.rankC
+            )
+
+        }
+
+    };
+
+    journey.push(movement);
+
+    console.log("Choice:", movement);
+}
+
+
+/* =========================================================
+   FINISH
+========================================================= */
+
+function finish() {
+
+    document
+        .getElementById("finished")
+        .classList.add("visible");
+
+    console.log(
+        "Journey:",
+        journey
+    );
+
+}
+
+
+/* =========================================================
+   KEYBOARD
+========================================================= */
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        /*
+            Don't allow the browser
+            to scroll with arrow keys.
+        */
+
+        if (
+            [
+                "ArrowUp",
+                "ArrowDown",
+                "ArrowLeft",
+                "ArrowRight",
+                " ",
+                "Enter"
+            ].includes(event.key)
+        ) {
+            event.preventDefault();
+        }
+
+
+        /*
+            Arrow navigation
+        */
+
+        if (
+            event.key.startsWith("Arrow")
+        ) {
+
+            moveSelection(event.key);
+
+            return;
+        }
+
+
+        /*
+            Selection
+        */
+
+        if (
+            event.key === "Enter" ||
+            event.key === " "
+        ) {
+
+            selectCurrentChoice();
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   MOUSE SUPPORT
+========================================================= */
+
+document
+    .querySelectorAll(".choice")
+    .forEach(element => {
+
+        element.addEventListener(
+            "click",
+            () => {
+
+                const slot =
+                    Number(
+                        element.dataset.slot
+                    );
+
+                if (!choices[slot]) {
+                    return;
+                }
+
+                selectedSlot = slot;
+
+                render();
+
+                /*
+                    Double-click/click behavior
+                    can be changed later.
+                */
+
+                selectCurrentChoice();
+
+            }
+        );
+
+    });
+
+
+/* =========================================================
+   START
+========================================================= */
+
+viewed.add(currentId);
+
+generateChoices();
+
+</script>
+
+</body>
+</html>
+```

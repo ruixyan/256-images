@@ -58,7 +58,6 @@ export async function deleteImage(formData: FormData) {
   const url = formData.get("url") as string;
   const sourceType = formData.get("sourceType") as string;
 
-  // If it was an uploaded file, also remove it from Storage
   if (sourceType === "upload") {
     const fileName = url.split("/").pop();
     if (fileName) {
@@ -71,6 +70,7 @@ export async function deleteImage(formData: FormData) {
   if (error) throw new Error(error.message);
   revalidatePath("/images");
 }
+
 export async function updateImage(formData: FormData) {
   const supabase = await createClient();
   const id = formData.get("id") as string;
@@ -86,3 +86,48 @@ export async function updateImage(formData: FormData) {
   revalidatePath("/images");
 }
 
+export async function assignImageToFolders(formData: FormData) {
+  const supabase = await createClient();
+  const id = formData.get("id") as string;
+  const folderIds = formData.getAll("folderIds") as string[];
+
+  const { error: deleteError } = await supabase
+    .from("image_folders")
+    .delete()
+    .eq("image_id", id);
+
+  if (deleteError) throw new Error(deleteError.message);
+
+  if (folderIds.length > 0) {
+    const { error: insertError } = await supabase
+      .from("image_folders")
+      .insert(folderIds.map((folderId) => ({ image_id: id, folder_id: folderId })));
+
+    if (insertError) throw new Error(insertError.message);
+  }
+
+  revalidatePath("/images");
+  revalidatePath("/folders");
+}
+
+// lib/actions/images.ts — add this export
+export async function updateCatalogInfo(formData: FormData) {
+  const supabase = await createClient();
+  const id = formData.get("id") as string;
+
+  const { error } = await supabase
+    .from("images")
+    .update({
+      title: (formData.get("title") as string) || null,
+      artist: (formData.get("artist") as string) || null,
+      date: (formData.get("date") as string) || null,
+      medium: (formData.get("medium") as string) || null,
+      color: (formData.get("color") as string) || null,
+      subject_matter: (formData.get("subjectMatter") as string) || null,
+    })
+    .eq("id", id);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/images");
+  revalidatePath("/folders");
+}

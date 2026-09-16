@@ -1,0 +1,3005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Way Through</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+
+    width: 100%;
+    height: 100%;
+
+    overflow: hidden;
+
+    background: #0a0a0b;
+    color: #f4f4f2;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+}
+
+body {
+    position: relative;
+}
+
+#app {
+    position: relative;
+
+    width: 100%;
+    height: 100%;
+
+    overflow: hidden;
+}
+
+
+/* =========================================================
+   THREE.JS
+   ========================================================= */
+
+#canvas-container {
+    position: absolute;
+    inset: 0;
+
+    overflow: hidden;
+}
+
+canvas {
+    display: block;
+}
+
+
+/* =========================================================
+   TOP LEFT
+   ========================================================= */
+
+#brand {
+    position: absolute;
+
+    top: 22px;
+    left: 24px;
+
+    z-index: 20;
+
+    pointer-events: none;
+}
+
+#brand-small {
+    margin-bottom: 4px;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+
+    opacity: 0.48;
+}
+
+#brand-title {
+    font-size: 15px;
+    font-weight: 600;
+
+    letter-spacing: -0.01em;
+
+    opacity: 0.9;
+}
+
+
+/* =========================================================
+   TOP RIGHT BUTTON
+   ========================================================= */
+
+#tune-button {
+    position: absolute;
+
+    top: 16px;
+    right: 16px;
+
+    z-index: 20;
+
+    height: 46px;
+    min-width: 220px;
+
+    padding: 0 18px;
+
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 14px;
+
+    background: rgba(10,10,11,0.45);
+
+    color: rgba(255,255,255,0.78);
+
+    font-size: 11px;
+    font-weight: 600;
+
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+
+    cursor: pointer;
+
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease,
+        color 0.2s ease;
+}
+
+#tune-button:hover {
+    border-color: rgba(255,255,255,0.3);
+
+    background: rgba(255,255,255,0.04);
+
+    color: white;
+}
+
+
+/* =========================================================
+   BOTTOM LEFT
+   ========================================================= */
+
+#drag-label {
+    position: absolute;
+
+    left: 22px;
+    bottom: 22px;
+
+    z-index: 20;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+
+    opacity: 0.48;
+
+    pointer-events: none;
+}
+
+
+/* =========================================================
+   BOTTOM CENTER CONTROLS
+   ========================================================= */
+
+#controls {
+    position: absolute;
+
+    left: 50%;
+    bottom: 16px;
+
+    transform: translateX(-50%);
+
+    z-index: 30;
+
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.nav-button {
+    width: 46px;
+    height: 46px;
+
+    border-radius: 12px;
+
+    border: 1px solid rgba(255,255,255,0.24);
+
+    background: rgba(20,20,21,0.6);
+
+    color: white;
+
+    font-size: 27px;
+    font-weight: 300;
+
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.15s ease;
+}
+
+.nav-button:hover {
+    background: rgba(255,255,255,0.08);
+
+    border-color: rgba(255,255,255,0.4);
+}
+
+.nav-button:active {
+    transform: scale(0.94);
+}
+
+#dots {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    min-width: 100px;
+
+    justify-content: center;
+}
+
+.dot {
+    width: 17px;
+    height: 3px;
+
+    border-radius: 20px;
+
+    background: rgba(255,255,255,0.22);
+
+    transition:
+        background 0.25s ease,
+        transform 0.25s ease;
+}
+
+.dot.active {
+    background: rgba(255,190,70,0.95);
+
+    transform: scaleX(1.35);
+}
+
+
+/* =========================================================
+   PROGRESS
+   ========================================================= */
+
+#progress {
+    position: absolute;
+
+    right: 25px;
+    bottom: 24px;
+
+    z-index: 20;
+
+    font-size: 10px;
+    font-weight: 600;
+
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+
+    opacity: 0.38;
+
+    pointer-events: none;
+}
+
+
+/* =========================================================
+   CATEGORY INDICATOR
+   ========================================================= */
+
+#category {
+    position: absolute;
+
+    left: 50%;
+    top: calc(50% + 245px);
+
+    transform: translateX(-50%);
+
+    z-index: 20;
+
+    font-size: 10px;
+    font-weight: 600;
+
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+
+    opacity: 0;
+
+    transition:
+        opacity 0.3s ease;
+
+    pointer-events: none;
+}
+
+#category.visible {
+    opacity: 0.45;
+}
+
+
+/* =========================================================
+   START SCREEN
+   ========================================================= */
+
+#start-screen {
+    position: absolute;
+
+    inset: 0;
+
+    z-index: 100;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    background: #0a0a0b;
+}
+
+.start-content {
+    width: min(600px, calc(100% - 40px));
+
+    text-align: center;
+}
+
+.start-content h1 {
+    margin: 0 0 12px;
+
+    font-size:
+        clamp(42px, 7vw, 76px);
+
+    font-weight: 400;
+
+    letter-spacing: -0.045em;
+}
+
+.start-content p {
+    margin: 0 auto 30px;
+
+    max-width: 440px;
+
+    font-size: 14px;
+    line-height: 1.7;
+
+    color: rgba(255,255,255,0.5);
+}
+
+#start-button {
+    height: 46px;
+
+    padding: 0 25px;
+
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 12px;
+
+    background: transparent;
+
+    color: white;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease;
+}
+
+#start-button:hover {
+    background: rgba(255,255,255,0.07);
+
+    border-color: rgba(255,255,255,0.45);
+}
+
+
+/* =========================================================
+   FINISH
+   ========================================================= */
+
+#finish-screen {
+    position: absolute;
+
+    inset: 0;
+
+    z-index: 200;
+
+    display: none;
+
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(10,10,11,0.97);
+}
+
+.finish-content {
+    text-align: center;
+}
+
+.finish-content h2 {
+    margin: 0 0 10px;
+
+    font-size:
+        clamp(40px, 7vw, 72px);
+
+    font-weight: 400;
+
+    letter-spacing: -0.04em;
+}
+
+.finish-content p {
+    margin: 0;
+
+    color: rgba(255,255,255,0.45);
+
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+    #brand {
+        top: 15px;
+        left: 16px;
+    }
+
+    #brand-small {
+        font-size: 9px;
+    }
+
+    #brand-title {
+        font-size: 13px;
+    }
+
+    #tune-button {
+        top: 10px;
+        right: 10px;
+
+        min-width: 120px;
+        height: 40px;
+
+        font-size: 9px;
+
+        border-radius: 11px;
+    }
+
+    #drag-label {
+        left: 16px;
+        bottom: 20px;
+
+        font-size: 9px;
+    }
+
+    #progress {
+        right: 16px;
+        bottom: 20px;
+
+        font-size: 9px;
+    }
+
+    #controls {
+        bottom: 10px;
+
+        gap: 10px;
+    }
+
+    .nav-button {
+        width: 42px;
+        height: 42px;
+
+        border-radius: 11px;
+    }
+
+    #dots {
+        gap: 7px;
+        min-width: 72px;
+    }
+
+    .dot {
+        width: 10px;
+    }
+
+    #category {
+        top: calc(50% + 190px);
+    }
+}
+
+</style>
+</head>
+
+
+<body>
+
+<div id="app">
+
+    <div id="canvas-container"></div>
+
+
+    <!-- TOP LEFT -->
+
+    <div id="brand">
+
+        <div id="brand-small">
+            Interactive carousel
+        </div>
+
+        <div id="brand-title">
+            Way through
+        </div>
+
+    </div>
+
+
+    <!-- TOP RIGHT -->
+
+    <button id="tune-button">
+        Tune motion
+    </button>
+
+
+    <!-- CATEGORY -->
+
+    <div id="category">
+        A · Higher
+    </div>
+
+
+    <!-- BOTTOM LEFT -->
+
+    <div id="drag-label">
+        Drag to explore
+    </div>
+
+
+    <!-- NAVIGATION -->
+
+    <div id="controls">
+
+        <button
+            class="nav-button"
+            id="prev-button"
+            aria-label="Previous choice"
+        >
+            ‹
+        </button>
+
+
+        <div id="dots"></div>
+
+
+        <button
+            class="nav-button"
+            id="next-button"
+            aria-label="Next choice"
+        >
+            ›
+        </button>
+
+    </div>
+
+
+    <!-- PROGRESS -->
+
+    <div id="progress">
+        1 / 100
+    </div>
+
+
+    <!-- START -->
+
+    <div id="start-screen">
+
+        <div class="start-content">
+
+            <h1>
+                Way through
+            </h1>
+
+            <p>
+                Move through a collection of images.
+                Follow whatever catches your attention.
+            </p>
+
+            <button id="start-button">
+                Begin
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- FINISH -->
+
+    <div id="finish-screen">
+
+        <div class="finish-content">
+
+            <h2>
+                Finished
+            </h2>
+
+            <p>
+                You viewed all 100 images.
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+
+<script>
+
+/* =========================================================
+   IMAGE DATA
+   ========================================================= */
+
+/*
+    These are placeholder images.
+
+    Replace this section with your actual 100 images.
+
+    Each image needs:
+
+        id
+        image
+        rankA
+        rankB
+        rankC
+*/
+
+const images = [];
+
+for (let i = 0; i < 100; i++) {
+
+    images.push({
+
+        id: i,
+
+        image:
+            `https://picsum.photos/seed/${i + 100}/700/700`,
+
+        rankA:
+            i + 1,
+
+        rankB:
+            ((i * 37) % 100) + 1,
+
+        rankC:
+            ((i * 61) % 100) + 1
+
+    });
+}
+
+
+/* =========================================================
+   THREE.JS
+   ========================================================= */
+
+const container =
+    document.getElementById(
+        "canvas-container"
+    );
+
+
+const scene =
+    new THREE.Scene();
+
+
+const camera =
+    new THREE.PerspectiveCamera(
+        38,
+        window.innerWidth /
+        window.innerHeight,
+        0.1,
+        100
+    );
+
+
+camera.position.set(
+    0,
+    0,
+    13
+);
+
+
+const renderer =
+    new THREE.WebGLRenderer({
+
+        antialias: true,
+
+        alpha: true
+
+    });
+
+
+renderer.setPixelRatio(
+    Math.min(
+        window.devicePixelRatio,
+        2
+    )
+);
+
+
+renderer.setSize(
+    window.innerWidth,
+    window.innerHeight
+);
+
+
+renderer.outputEncoding =
+    THREE.sRGBEncoding;
+
+
+container.appendChild(
+    renderer.domElement
+);
+
+
+/* =========================================================
+   STATE
+   ========================================================= */
+
+let currentId = 0;
+
+let viewed =
+    new Set();
+
+let choices = [];
+
+let currentChoiceIndex = 0;
+
+let cardObjects = [];
+
+let currentCard = null;
+
+let isRunning = false;
+
+let isAnimating = false;
+
+let isDragging = false;
+
+let dragStartX = 0;
+
+let dragCurrentX = 0;
+
+let lastDragX = 0;
+
+let motionTuned = false;
+
+
+/*
+    Behavioral history.
+
+    This is the important dataset generated
+    by the experience.
+*/
+
+const history = [];
+
+
+/* =========================================================
+   TEXTURE LOADER
+   ========================================================= */
+
+const loader =
+    new THREE.TextureLoader();
+
+loader.crossOrigin =
+    "anonymous";
+
+
+/* =========================================================
+   RANKING DEFINITIONS
+   ========================================================= */
+
+const rankings = {
+
+    A: "rankA",
+
+    B: "rankB",
+
+    C: "rankC"
+
+};
+
+
+/*
+    Six possible paths.
+*/
+
+const directions = [
+
+    {
+        category: "A",
+        direction: 1,
+        label: "A · Higher"
+    },
+
+    {
+        category: "A",
+        direction: -1,
+        label: "A · Lower"
+    },
+
+    {
+        category: "B",
+        direction: 1,
+        label: "B · Higher"
+    },
+
+    {
+        category: "B",
+        direction: -1,
+        label: "B · Lower"
+    },
+
+    {
+        category: "C",
+        direction: 1,
+        label: "C · Higher"
+    },
+
+    {
+        category: "C",
+        direction: -1,
+        label: "C · Lower"
+    }
+
+];
+
+
+/* =========================================================
+   FIND IMAGE
+   ========================================================= */
+
+function getImage(id) {
+
+    return images.find(
+        image =>
+            image.id === id
+    );
+
+}
+
+
+/* =========================================================
+   FIND NEAREST UNSEEN
+   ========================================================= */
+
+function findNearestUnseen(
+    current,
+    ranking,
+    direction
+) {
+
+    const currentRank =
+        current[ranking];
+
+
+    for (
+        let distance = 1;
+        distance <= images.length;
+        distance++
+    ) {
+
+        const targetRank =
+            currentRank +
+            distance *
+            direction;
+
+
+        if (
+            targetRank < 1 ||
+            targetRank > images.length
+        ) {
+
+            break;
+
+        }
+
+
+        const candidate =
+            images.find(
+                image =>
+                    image[ranking] ===
+                    targetRank
+            );
+
+
+        if (
+            candidate &&
+            !viewed.has(
+                candidate.id
+            )
+        ) {
+
+            return {
+
+                image: candidate,
+
+                distance: distance,
+
+                ranking: ranking,
+
+                direction: direction
+
+            };
+
+        }
+
+    }
+
+
+    return null;
+}
+
+
+/* =========================================================
+   GENERATE CHOICES
+   ========================================================= */
+
+function generateChoices() {
+
+    const current =
+        getImage(currentId);
+
+
+    if (!current) {
+        return;
+    }
+
+
+    const candidates = [];
+
+
+    /*
+        Search each ranking direction.
+    */
+
+    for (
+        const directionInfo of directions
+    ) {
+
+        const ranking =
+            rankings[
+                directionInfo.category
+            ];
+
+
+        const found =
+            findNearestUnseen(
+                current,
+                ranking,
+                directionInfo.direction
+            );
+
+
+        if (!found) {
+            continue;
+        }
+
+
+        candidates.push({
+
+            ...found,
+
+            category:
+                directionInfo.category,
+
+            label:
+                directionInfo.label
+
+        });
+
+    }
+
+
+    /*
+        Remove duplicates.
+    */
+
+    const unique = [];
+
+    const usedIds =
+        new Set();
+
+
+    for (
+        const candidate of candidates
+    ) {
+
+        if (
+            !candidate ||
+            !candidate.image
+        ) {
+
+            continue;
+
+        }
+
+
+        const id =
+            candidate.image.id;
+
+
+        if (
+            usedIds.has(id)
+        ) {
+
+            continue;
+
+        }
+
+
+        usedIds.add(id);
+
+        unique.push(
+            candidate
+        );
+
+    }
+
+
+    /*
+        If fewer than six ranking choices
+        exist, fill with unseen images.
+    */
+
+    if (
+        unique.length < 6
+    ) {
+
+        const fallback =
+            images.filter(
+                image =>
+                    !viewed.has(
+                        image.id
+                    ) &&
+                    !usedIds.has(
+                        image.id
+                    )
+            );
+
+
+        /*
+            Shuffle fallback images.
+        */
+
+        fallback.sort(
+            () =>
+                Math.random() - 0.5
+        );
+
+
+        for (
+            const image of fallback
+        ) {
+
+            if (
+                unique.length >= 6
+            ) {
+
+                break;
+
+            }
+
+
+            usedIds.add(
+                image.id
+            );
+
+
+            unique.push({
+
+                image: image,
+
+                distance: null,
+
+                ranking: null,
+
+                direction: null,
+
+                category: "Other",
+
+                label: "Other"
+
+            });
+
+        }
+
+    }
+
+
+    choices =
+        unique.slice(0, 6);
+
+
+    /*
+        Start with the first candidate.
+    */
+
+    currentChoiceIndex = 0;
+
+
+    buildCarousel();
+
+    updateDots();
+
+    updateCategory();
+
+}
+
+
+/* =========================================================
+   CARD POSITIONS
+   ========================================================= */
+
+/*
+    This creates the visual arrangement:
+
+                left      CENTER      right
+
+                    small     small
+                         LARGE
+
+    Similar to the reference screenshot.
+*/
+
+function getCardTransform(
+    relativeIndex
+) {
+
+    const isMobile =
+        window.innerWidth < 700;
+
+
+    const spacing =
+        isMobile
+            ? 2.55
+            : 3.35;
+
+
+    const centerScale =
+        isMobile
+            ? 1.25
+            : 1.42;
+
+
+    /*
+        Center.
+    */
+
+    if (
+        relativeIndex === 0
+    ) {
+
+        return {
+
+            x: 0,
+
+            y: 0,
+
+            z: 1,
+
+            rotation: 0,
+
+            scale: centerScale,
+
+            opacity: 1
+
+        };
+
+    }
+
+
+    /*
+        One step left.
+    */
+
+    if (
+        relativeIndex === -1
+    ) {
+
+        return {
+
+            x: -spacing,
+
+            y: 0.12,
+
+            z: -0.5,
+
+            rotation: 0.09,
+
+            scale: 0.88,
+
+            opacity: 0.72
+
+        };
+
+    }
+
+
+    /*
+        One step right.
+    */
+
+    if (
+        relativeIndex === 1
+    ) {
+
+        return {
+
+            x: spacing,
+
+            y: 0.12,
+
+            z: -0.5,
+
+            rotation: -0.09,
+
+            scale: 0.88,
+
+            opacity: 0.72
+
+        };
+
+    }
+
+
+    /*
+        Far left.
+    */
+
+    if (
+        relativeIndex === -2
+    ) {
+
+        return {
+
+            x: -spacing * 1.72,
+
+            y: 0.28,
+
+            z: -1.3,
+
+            rotation: 0.16,
+
+            scale: 0.72,
+
+            opacity: 0.42
+
+        };
+
+    }
+
+
+    /*
+        Far right.
+    */
+
+    if (
+        relativeIndex === 2
+    ) {
+
+        return {
+
+            x: spacing * 1.72,
+
+            y: 0.28,
+
+            z: -1.3,
+
+            rotation: -0.16,
+
+            scale: 0.72,
+
+            opacity: 0.42
+
+        };
+
+    }
+
+
+    /*
+        Hide anything beyond the visible range.
+    */
+
+    return {
+
+        x:
+            relativeIndex < 0
+                ? -10
+                : 10,
+
+        y: 0,
+
+        z: -4,
+
+        rotation: 0,
+
+        scale: 0.5,
+
+        opacity: 0
+
+    };
+
+}
+
+
+/* =========================================================
+   BUILD CAROUSEL
+   ========================================================= */
+
+function buildCarousel() {
+
+    /*
+        Remove previous cards.
+    */
+
+    for (
+        const object of cardObjects
+    ) {
+
+        scene.remove(
+            object
+        );
+
+
+        if (
+            object.geometry
+        ) {
+
+            object.geometry.dispose();
+
+        }
+
+
+        if (
+            object.material
+        ) {
+
+            if (
+                object.material.map
+            ) {
+
+                object.material.map.dispose();
+
+            }
+
+
+            object.material.dispose();
+
+        }
+
+    }
+
+
+    cardObjects = [];
+
+
+    /*
+        We show the current image in the center,
+        followed by the six possible choices.
+
+        The carousel wraps around.
+    */
+
+    const cards = [
+
+        {
+            type: "current",
+
+            image:
+                getImage(currentId),
+
+            choiceIndex: null
+
+        }
+
+    ];
+
+
+    /*
+        Four surrounding choices are displayed.
+    */
+
+    for (
+        let offset = -2;
+        offset <= 2;
+        offset++
+    ) {
+
+        if (
+            offset === 0
+        ) {
+
+            continue;
+
+        }
+
+
+        const index =
+            mod(
+                currentChoiceIndex +
+                offset -
+                1,
+                choices.length
+            );
+
+
+        if (
+            choices[index]
+        ) {
+
+            cards.push({
+
+                type: "choice",
+
+                image:
+                    choices[index].image,
+
+                choiceIndex:
+                    index,
+
+                offset:
+                    offset
+
+            });
+
+        }
+
+    }
+
+
+    /*
+        Current card.
+    */
+
+    const current =
+        cards[0];
+
+
+    createCard(
+        current.image,
+        true,
+        null
+    );
+
+
+    /*
+        Choice cards.
+    */
+
+    for (
+        const card of cards.slice(1)
+    ) {
+
+        createCard(
+            card.image,
+            false,
+            card.choiceIndex,
+            card.offset
+        );
+
+    }
+
+
+    updateCardPositions(
+        true
+    );
+
+}
+
+
+/* =========================================================
+   CREATE CARD
+   ========================================================= */
+
+function createCard(
+    image,
+    isCurrent,
+    choiceIndex,
+    offset
+) {
+
+    if (!image) {
+        return;
+    }
+
+
+    const texture =
+        loader.load(
+            image.image
+        );
+
+
+    texture.encoding =
+        THREE.sRGBEncoding;
+
+
+    const geometry =
+        new THREE.PlaneGeometry(
+            2.75,
+            2.75
+        );
+
+
+    const material =
+        new THREE.MeshBasicMaterial({
+
+            map: texture,
+
+            transparent: true,
+
+            opacity:
+                isCurrent
+                    ? 1
+                    : 0.5,
+
+            side:
+                THREE.DoubleSide
+
+        });
+
+
+    const mesh =
+        new THREE.Mesh(
+            geometry,
+            material
+        );
+
+
+    mesh.userData = {
+
+        imageId:
+            image.id,
+
+        isCurrent:
+            isCurrent,
+
+        choiceIndex:
+            choiceIndex,
+
+        offset:
+            offset,
+
+        targetX: 0,
+
+        targetY: 0,
+
+        targetZ: 0,
+
+        targetRotation: 0,
+
+        targetScale: 1,
+
+        targetOpacity: 1
+
+    };
+
+
+    scene.add(
+        mesh
+    );
+
+
+    cardObjects.push(
+        mesh
+    );
+
+}
+
+
+/* =========================================================
+   UPDATE CARD POSITIONS
+   ========================================================= */
+
+function updateCardPositions(
+    instant = false
+) {
+
+    for (
+        const object of cardObjects
+    ) {
+
+        let relativeIndex;
+
+
+        /*
+            Current image always has
+            relative position 0.
+        */
+
+        if (
+            object.userData.isCurrent
+        ) {
+
+            relativeIndex = 0;
+
+        }
+
+        else {
+
+            const choiceIndex =
+                object.userData.choiceIndex;
+
+
+            /*
+                Calculate relative position
+                around the active choice.
+            */
+
+            let difference =
+                choiceIndex -
+                currentChoiceIndex;
+
+
+            /*
+                Wrap around six choices.
+            */
+
+            if (
+                difference > choices.length / 2
+            ) {
+
+                difference -=
+                    choices.length;
+
+            }
+
+
+            if (
+                difference <
+                -choices.length / 2
+            ) {
+
+                difference +=
+                    choices.length;
+
+            }
+
+
+            /*
+                We display choices relative
+                to the selected candidate.
+
+                The selected candidate occupies
+                the center.
+
+                The current image becomes the
+                previous visual state and slides
+                left/right during selection.
+            */
+
+            relativeIndex =
+                difference;
+        }
+
+
+        const transform =
+            getCardTransform(
+                relativeIndex
+            );
+
+
+        object.userData.targetX =
+            transform.x;
+
+
+        object.userData.targetY =
+            transform.y;
+
+
+        object.userData.targetZ =
+            transform.z;
+
+
+        object.userData.targetRotation =
+            transform.rotation;
+
+
+        object.userData.targetScale =
+            transform.scale;
+
+
+        object.userData.targetOpacity =
+            transform.opacity;
+
+
+        /*
+            Bring center forward.
+        */
+
+        if (
+            instant
+        ) {
+
+            object.position.x =
+                transform.x;
+
+            object.position.y =
+                transform.y;
+
+            object.position.z =
+                transform.z;
+
+            object.rotation.z =
+                transform.rotation;
+
+            object.scale.set(
+                transform.scale,
+                transform.scale,
+                1
+            );
+
+            object.material.opacity =
+                transform.opacity;
+
+        }
+
+    }
+
+
+    /*
+        The current image is always behind
+        the selected choice when a choice is
+        being previewed.
+    */
+
+    updateCurrentPreview();
+
+}
+
+
+/* =========================================================
+   CURRENT PREVIEW
+   ========================================================= */
+
+function updateCurrentPreview() {
+
+    /*
+        Make the selected candidate visually
+        occupy the center.
+
+        This gives the reference-like carousel
+        behavior without committing the image
+        until the user clicks / presses Enter.
+    */
+
+    const selected =
+        choices[
+            currentChoiceIndex
+        ];
+
+
+    if (!selected) {
+        return;
+    }
+
+
+    for (
+        const object of cardObjects
+    ) {
+
+        if (
+            object.userData.isCurrent
+        ) {
+
+            /*
+                Current image sits behind the
+                selected candidate.
+            */
+
+            object.userData.targetZ =
+                -2.2;
+
+            object.userData.targetScale =
+                0.72;
+
+            object.userData.targetOpacity =
+                0.18;
+
+            object.userData.targetX =
+                -4.4;
+
+            object.userData.targetRotation =
+                0.14;
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   NAVIGATE CHOICES
+   ========================================================= */
+
+function moveChoice(
+    direction
+) {
+
+    if (
+        !isRunning ||
+        isAnimating ||
+        choices.length === 0
+    ) {
+
+        return;
+
+    }
+
+
+    currentChoiceIndex =
+        mod(
+            currentChoiceIndex +
+            direction,
+            choices.length
+        );
+
+
+    buildCarousel();
+
+    updateDots();
+
+    updateCategory();
+
+}
+
+
+/* =========================================================
+   MODULO
+   ========================================================= */
+
+function mod(
+    number,
+    divisor
+) {
+
+    return (
+        (
+            number %
+            divisor
+        ) +
+        divisor
+    ) % divisor;
+
+}
+
+
+/* =========================================================
+   DOTS
+   ========================================================= */
+
+function updateDots() {
+
+    const container =
+        document.getElementById(
+            "dots"
+        );
+
+
+    container.innerHTML = "";
+
+
+    choices.forEach(
+        (_, index) => {
+
+            const dot =
+                document.createElement(
+                    "div"
+                );
+
+
+            dot.className =
+                "dot";
+
+
+            if (
+                index === currentChoiceIndex
+            ) {
+
+                dot.classList.add(
+                    "active"
+                );
+
+            }
+
+
+            dot.addEventListener(
+                "click",
+                () => {
+
+                    currentChoiceIndex =
+                        index;
+
+                    buildCarousel();
+
+                    updateDots();
+
+                    updateCategory();
+
+                }
+            );
+
+
+            container.appendChild(
+                dot
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   CATEGORY LABEL
+   ========================================================= */
+
+function updateCategory() {
+
+    const element =
+        document.getElementById(
+            "category"
+        );
+
+
+    const choice =
+        choices[
+            currentChoiceIndex
+        ];
+
+
+    if (!choice) {
+
+        element.classList.remove(
+            "visible"
+        );
+
+        return;
+
+    }
+
+
+    element.textContent =
+        choice.label;
+
+
+    element.classList.add(
+        "visible"
+    );
+
+}
+
+
+/* =========================================================
+   COMMIT CURRENT CHOICE
+   ========================================================= */
+
+function selectCurrentChoice() {
+
+    if (
+        !isRunning ||
+        isAnimating
+    ) {
+
+        return;
+
+    }
+
+
+    const choice =
+        choices[
+            currentChoiceIndex
+        ];
+
+
+    if (
+        !choice ||
+        !choice.image
+    ) {
+
+        return;
+
+    }
+
+
+    const from =
+        getImage(
+            currentId
+        );
+
+
+    const to =
+        choice.image;
+
+
+    /*
+        -----------------------------------------
+        BEHAVIORAL DATA
+        -----------------------------------------
+    */
+
+    const record = {
+
+        step:
+            history.length + 1,
+
+        fromId:
+            from.id,
+
+        toId:
+            to.id,
+
+        choiceIndex:
+            currentChoiceIndex,
+
+        category:
+            choice.category,
+
+        direction:
+            choice.direction,
+
+        ranking:
+            choice.ranking,
+
+        rankDistance:
+            choice.distance,
+
+        fromRankA:
+            from.rankA,
+
+        fromRankB:
+            from.rankB,
+
+        fromRankC:
+            from.rankC,
+
+        toRankA:
+            to.rankA,
+
+        toRankB:
+            to.rankB,
+
+        toRankC:
+            to.rankC,
+
+        deltaA:
+            to.rankA -
+            from.rankA,
+
+        deltaB:
+            to.rankB -
+            from.rankB,
+
+        deltaC:
+            to.rankC -
+            from.rankC,
+
+        viewedBefore:
+            viewed.size,
+
+        timestamp:
+            new Date().toISOString()
+
+    };
+
+
+    history.push(
+        record
+    );
+
+
+    console.log(
+        "CHOICE",
+        record
+    );
+
+
+    /*
+        Mark image viewed.
+    */
+
+    viewed.add(
+        to.id
+    );
+
+
+    /*
+        Animate the chosen image into
+        the center.
+    */
+
+    animateSelection(
+        to
+    );
+
+}
+
+
+/* =========================================================
+   ANIMATE SELECTION
+   ========================================================= */
+
+function animateSelection(
+    selectedImage
+) {
+
+    isAnimating = true;
+
+
+    const duration =
+        650;
+
+
+    const start =
+        performance.now();
+
+
+    /*
+        Find selected card.
+    */
+
+    const selectedObject =
+        cardObjects.find(
+            object =>
+                object.userData.choiceIndex ===
+                currentChoiceIndex
+        );
+
+
+    if (!selectedObject) {
+
+        finishSelection(
+            selectedImage
+        );
+
+        return;
+
+    }
+
+
+    const startX =
+        selectedObject.position.x;
+
+
+    const startY =
+        selectedObject.position.y;
+
+
+    const startZ =
+        selectedObject.position.z;
+
+
+    const startScale =
+        selectedObject.scale.x;
+
+
+    function frame(
+        now
+    ) {
+
+        const elapsed =
+            now - start;
+
+
+        const progress =
+            Math.min(
+                elapsed /
+                duration,
+                1
+            );
+
+
+        const eased =
+            1 -
+            Math.pow(
+                1 - progress,
+                3
+            );
+
+
+        selectedObject.position.x =
+            startX +
+            (
+                0 -
+                startX
+            ) *
+            eased;
+
+
+        selectedObject.position.y =
+            startY +
+            (
+                0 -
+                startY
+            ) *
+            eased;
+
+
+        selectedObject.position.z =
+            startZ +
+            (
+                2 -
+                startZ
+            ) *
+            eased;
+
+
+        const scale =
+            startScale +
+            (
+                1.42 -
+                startScale
+            ) *
+            eased;
+
+
+        selectedObject.scale.set(
+            scale,
+            scale,
+            1
+        );
+
+
+        selectedObject.rotation.z =
+            selectedObject.rotation.z *
+            (1 - eased);
+
+
+        selectedObject.material.opacity =
+            1;
+
+
+        if (
+            progress < 1
+        ) {
+
+            requestAnimationFrame(
+                frame
+            );
+
+        }
+
+        else {
+
+            finishSelection(
+                selectedImage
+            );
+
+        }
+
+    }
+
+
+    requestAnimationFrame(
+        frame
+    );
+
+}
+
+
+/* =========================================================
+   FINISH SELECTION
+   ========================================================= */
+
+function finishSelection(
+    selectedImage
+) {
+
+    currentId =
+        selectedImage.id;
+
+
+    /*
+        All images seen?
+    */
+
+    if (
+        viewed.size >=
+        images.length
+    ) {
+
+        finishExperience();
+
+        return;
+
+    }
+
+
+    /*
+        New center.
+    */
+
+    buildCurrentImage();
+
+
+    /*
+        Generate new choices
+        from this image.
+    */
+
+    generateChoices();
+
+
+    updateProgress();
+
+
+    isAnimating = false;
+
+}
+
+
+/* =========================================================
+   CURRENT IMAGE
+   ========================================================= */
+
+function buildCurrentImage() {
+
+    /*
+        The carousel is rebuilt by generateChoices.
+
+        This function intentionally does nothing
+        because the current image is generated
+        as part of buildCarousel().
+    */
+
+}
+
+
+/* =========================================================
+   PROGRESS
+   ========================================================= */
+
+function updateProgress() {
+
+    document.getElementById(
+        "progress"
+    ).textContent =
+        `${viewed.size} / ${images.length}`;
+
+}
+
+
+/* =========================================================
+   DRAG SUPPORT
+   ========================================================= */
+
+renderer.domElement.addEventListener(
+    "pointerdown",
+    event => {
+
+        if (
+            !isRunning ||
+            isAnimating
+        ) {
+
+            return;
+
+        }
+
+
+        isDragging = true;
+
+
+        dragStartX =
+            event.clientX;
+
+
+        dragCurrentX =
+            event.clientX;
+
+
+        lastDragX =
+            event.clientX;
+
+
+        renderer.domElement.setPointerCapture(
+            event.pointerId
+        );
+
+    }
+);
+
+
+renderer.domElement.addEventListener(
+    "pointermove",
+    event => {
+
+        if (
+            !isDragging
+        ) {
+
+            return;
+
+        }
+
+
+        dragCurrentX =
+            event.clientX;
+
+
+        const delta =
+            dragCurrentX -
+            lastDragX;
+
+
+        lastDragX =
+            dragCurrentX;
+
+
+        /*
+            Slight physical movement while dragging.
+        */
+
+        for (
+            const object of cardObjects
+        ) {
+
+            if (
+                object.userData.isCurrent
+            ) {
+
+                continue;
+
+            }
+
+
+            object.position.x +=
+                delta *
+                0.006;
+
+        }
+
+    }
+);
+
+
+function endDrag() {
+
+    if (
+        !isDragging
+    ) {
+
+        return;
+
+    }
+
+
+    isDragging = false;
+
+
+    const distance =
+        dragCurrentX -
+        dragStartX;
+
+
+    /*
+        Minimum swipe distance.
+    */
+
+    if (
+        Math.abs(distance) > 45
+    ) {
+
+        if (
+            distance < 0
+        ) {
+
+            moveChoice(1);
+
+        }
+
+        else {
+
+            moveChoice(-1);
+
+        }
+
+    }
+
+    else {
+
+        /*
+            Snap back.
+        */
+
+        updateCardPositions();
+
+    }
+
+}
+
+
+renderer.domElement.addEventListener(
+    "pointerup",
+    endDrag
+);
+
+
+renderer.domElement.addEventListener(
+    "pointercancel",
+    endDrag
+);
+
+
+/* =========================================================
+   CLICK CARD
+   ========================================================= */
+
+renderer.domElement.addEventListener(
+    "click",
+    event => {
+
+        if (
+            !isRunning ||
+            isAnimating ||
+            Math.abs(
+                dragCurrentX -
+                dragStartX
+            ) > 15
+        ) {
+
+            return;
+
+        }
+
+
+        const rect =
+            renderer.domElement.getBoundingClientRect();
+
+
+        const mouse =
+            new THREE.Vector2(
+
+                (
+                    (
+                        event.clientX -
+                        rect.left
+                    ) /
+                    rect.width
+                ) * 2 - 1,
+
+                -(
+                    (
+                        event.clientY -
+                        rect.top
+                    ) /
+                    rect.height
+                ) * 2 + 1
+
+            );
+
+
+        const raycaster =
+            new THREE.Raycaster();
+
+
+        raycaster.setFromCamera(
+            mouse,
+            camera
+        );
+
+
+        const hits =
+            raycaster.intersectObjects(
+                cardObjects
+            );
+
+
+        if (
+            hits.length === 0
+        ) {
+
+            return;
+
+        }
+
+
+        const object =
+            hits[0].object;
+
+
+        /*
+            Clicking the current center
+            does nothing.
+
+            Clicking a side image makes it
+            the active choice.
+        */
+
+        if (
+            object.userData.isCurrent
+        ) {
+
+            return;
+
+        }
+
+
+        const index =
+            object.userData.choiceIndex;
+
+
+        if (
+            index === undefined ||
+            index === null
+        ) {
+
+            return;
+
+        }
+
+
+        currentChoiceIndex =
+            index;
+
+
+        /*
+            A single click on a side image
+            previews it.
+
+            Double-click / second click selects.
+        */
+
+        if (
+            object.userData.lastClick &&
+            Date.now() -
+            object.userData.lastClick <
+            350
+        ) {
+
+            selectCurrentChoice();
+
+        }
+
+        else {
+
+            buildCarousel();
+
+            updateDots();
+
+            updateCategory();
+
+        }
+
+
+        object.userData.lastClick =
+            Date.now();
+
+    }
+);
+
+
+/* =========================================================
+   KEYBOARD
+   ========================================================= */
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            !isRunning
+        ) {
+
+            return;
+
+        }
+
+
+        if (
+            [
+                "ArrowLeft",
+                "ArrowRight",
+                "Enter"
+            ].includes(
+                event.key
+            )
+        ) {
+
+            event.preventDefault();
+
+        }
+
+
+        if (
+            event.key ===
+            "ArrowLeft"
+        ) {
+
+            moveChoice(-1);
+
+        }
+
+
+        if (
+            event.key ===
+            "ArrowRight"
+        ) {
+
+            moveChoice(1);
+
+        }
+
+
+        if (
+            event.key ===
+            "Enter"
+        ) {
+
+            selectCurrentChoice();
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   TUNE MOTION
+   ========================================================= */
+
+document.getElementById(
+    "tune-button"
+).addEventListener(
+    "click",
+    () => {
+
+        motionTuned =
+            !motionTuned;
+
+
+        if (
+            motionTuned
+        ) {
+
+            document.getElementById(
+                "tune-button"
+            ).textContent =
+                "Motion: soft";
+
+        }
+
+        else {
+
+            document.getElementById(
+                "tune-button"
+            ).textContent =
+                "Tune motion";
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   START
+   ========================================================= */
+
+document.getElementById(
+    "start-button"
+).addEventListener(
+    "click",
+    () => {
+
+        document.getElementById(
+            "start-screen"
+        ).style.display =
+            "none";
+
+
+        isRunning = true;
+
+
+        /*
+            Random starting image.
+        */
+
+        currentId =
+            Math.floor(
+                Math.random() *
+                images.length
+            );
+
+
+        viewed =
+            new Set([
+                currentId
+            ]);
+
+
+        history.length = 0;
+
+
+        currentChoiceIndex = 0;
+
+
+        generateChoices();
+
+
+        updateProgress();
+
+    }
+);
+
+
+/* =========================================================
+   ANIMATION LOOP
+   ========================================================= */
+
+function animate() {
+
+    requestAnimationFrame(
+        animate
+    );
+
+
+    /*
+        Smoothly move cards toward targets.
+    */
+
+    for (
+        const object of cardObjects
+    ) {
+
+        if (
+            isDragging
+        ) {
+
+            continue;
+
+        }
+
+
+        object.position.x +=
+            (
+                object.userData.targetX -
+                object.position.x
+            ) * 0.12;
+
+
+        object.position.y +=
+            (
+                object.userData.targetY -
+                object.position.y
+            ) * 0.12;
+
+
+        object.position.z +=
+            (
+                object.userData.targetZ -
+                object.position.z
+            ) * 0.12;
+
+
+        object.rotation.z +=
+            (
+                object.userData.targetRotation -
+                object.rotation.z
+            ) * 0.12;
+
+
+        const targetScale =
+            object.userData.targetScale;
+
+
+        const scale =
+            object.scale.x +
+            (
+                targetScale -
+                object.scale.x
+            ) * 0.12;
+
+
+        object.scale.set(
+            scale,
+            scale,
+            1
+        );
+
+
+        object.material.opacity +=
+            (
+                object.userData.targetOpacity -
+                object.material.opacity
+            ) * 0.12;
+
+
+        /*
+            Very subtle floating motion.
+        */
+
+        const time =
+            performance.now() *
+            0.001;
+
+
+        if (
+            !object.userData.isCurrent
+        ) {
+
+            object.position.y +=
+                Math.sin(
+                    time * 0.8 +
+                    object.userData.choiceIndex
+                ) *
+                0.0015;
+
+        }
+
+    }
+
+
+    renderer.render(
+        scene,
+        camera
+    );
+
+}
+
+
+/* =========================================================
+   RESIZE
+   ========================================================= */
+
+window.addEventListener(
+    "resize",
+    () => {
+
+        camera.aspect =
+            window.innerWidth /
+            window.innerHeight;
+
+
+        camera.updateProjectionMatrix();
+
+
+        renderer.setSize(
+            window.innerWidth,
+            window.innerHeight
+        );
+
+
+        /*
+            Recalculate carousel geometry.
+        */
+
+        if (
+            isRunning
+        ) {
+
+            buildCarousel();
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   INITIAL SCENE
+   ========================================================= */
+
+renderer.render(
+    scene,
+    camera
+);
+
+
+animate();
+
+</script>
+
+</body>
+</html>

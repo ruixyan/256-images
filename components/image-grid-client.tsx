@@ -12,9 +12,24 @@ type ImageRecord = {
   source_url: string | null;
   source_name: string | null;
   note: string | null;
+  image_folders: { folder_id: string }[];
+  title: string | null;
+  artist: string | null;
+  date: string | null;
+  medium: string | null;
+  color: string | null;
+  subject_matter: string | null;
 };
 
-export default function ImageGridClient({ images }: { images: ImageRecord[] }) {
+type Folder = { id: string; name: string };
+
+export default function ImageGridClient({
+  images,
+  folders,
+}: {
+  images: ImageRecord[];
+  folders: Folder[];
+}) {
   const [selecting, setSelecting] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
@@ -75,7 +90,7 @@ export default function ImageGridClient({ images }: { images: ImageRecord[] }) {
         </form>
       )}
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-6">
         {images.map((img) => (
           <div key={img.id} className="relative">
             {selecting && (
@@ -86,7 +101,7 @@ export default function ImageGridClient({ images }: { images: ImageRecord[] }) {
                 className="absolute top-1 left-1 z-10 w-4 h-4"
               />
             )}
-            <ImageCard img={img} />
+            <ImageCard img={img} folders={folders} />
           </div>
         ))}
       </div>

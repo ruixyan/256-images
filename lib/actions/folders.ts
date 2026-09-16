@@ -17,11 +17,11 @@ export async function createFolderWithImages(formData: FormData) {
 
   if (folderError) throw new Error(folderError.message);
 
-  const { error: updateError } = await supabase
-    .from("images")
-    .update({ folder_id: folder.id })
-    .in("id", imageIds);
+  const { error: linkError } = await supabase
+    .from("image_folders")
+    .insert(imageIds.map((imageId) => ({ image_id: imageId, folder_id: folder.id })));
 
-  if (updateError) throw new Error(updateError.message);
+  if (linkError) throw new Error(linkError.message);
   revalidatePath("/images");
+  revalidatePath("/folders");
 }

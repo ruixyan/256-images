@@ -47,20 +47,24 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const user = data?.claims;
 
-if (
-  request.nextUrl.pathname !== "/" &&
-  !user &&
-  !request.nextUrl.pathname.startsWith("/login") &&
-  !request.nextUrl.pathname.startsWith("/auth") &&
-  request.nextUrl.pathname !== "/images" &&
-  !request.nextUrl.pathname.startsWith("/images/") &&
-  request.nextUrl.pathname !== "/folders" &&
-  !request.nextUrl.pathname.startsWith("/folders/")
-) {
-  const url = request.nextUrl.clone();
-  url.pathname = "/auth/login";
-  return NextResponse.redirect(url);
-}
+  if (
+    request.nextUrl.pathname !== "/" &&
+    !user &&
+    !request.nextUrl.pathname.startsWith("/login") &&
+    !request.nextUrl.pathname.startsWith("/auth") &&
+    request.nextUrl.pathname !== "/images" &&
+    !request.nextUrl.pathname.startsWith("/images/") &&
+    request.nextUrl.pathname !== "/folders" &&
+    !request.nextUrl.pathname.startsWith("/folders/") &&
+    request.nextUrl.pathname !== "/connections" &&
+    !request.nextUrl.pathname.startsWith("/connections/")&&
+    request.nextUrl.pathname !== "/quiz" &&
+    !request.nextUrl.pathname.startsWith("/quiz/")
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/auth/login";
+    return NextResponse.redirect(url);
+  }
   // IMPORTANT: You *must* return the supabaseResponse object as it is.
   // If you're creating a new response object with NextResponse.next() make sure to:
   // 1. Pass the request in it, like so:
