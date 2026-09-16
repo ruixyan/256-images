@@ -1,13 +1,24 @@
 // app/folders/[id]/page.tsx
+import { Suspense } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import ImageCard from "@/components/image-card";
 
-export default async function FolderPage({
+export default function FolderPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  return (
+    <div className="w-full px-6 py-10">
+      <Suspense fallback={<p className="text-sm text-gray-400">Loading folder...</p>}>
+        <FolderContent params={params} />
+      </Suspense>
+    </div>
+  );
+}
+
+async function FolderContent({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
 
@@ -38,7 +49,7 @@ export default async function FolderPage({
   const images = (imageLinks?.map((link) => link.images).filter(Boolean) ?? []) as any[];
 
   return (
-    <div className="w-full px-6 py-10">
+    <>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-lg">{folder.name}</h1>
         <Link href="/folders" className="text-xs underline text-gray-400">
@@ -59,6 +70,6 @@ export default async function FolderPage({
           <ImageCard key={img.id} img={img} folders={folders ?? []} />
         ))}
       </div>
-    </div>
+    </>
   );
 }
