@@ -2,10 +2,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { pickStartingNine, pickSimilarNine, summarizeCollection, emptyFilters, applyFilters, totalActiveFilters } from "@/lib/quiz";
+import { pickStartingNine, pickSimilarNine, summarizeCollection, emptyFilters, applyFilters } from "@/lib/quiz";
 import type { CollectionFilters, FilterField } from "@/lib/quiz";
+import { saveQuizSession } from "@/lib/quiz-graph";
+import type { StoredQuizRound } from "@/lib/quiz-graph";
 import { createFolderWithImages } from "@/lib/actions/folders";
 import CollectionBreakdown from "@/components/collection-breakdown";
+import QuizPathPreview from "@/components/quiz-path-preview";
 import type { ImageInput } from "@/lib/graph-layout";
 
 type QuizImage = ImageInput & {
@@ -16,7 +19,11 @@ type QuizImage = ImageInput & {
   date?: string | null;
 };
 
+type Phase = "intro" | "playing" | "finished";
+
 export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
+  const [phase, setPhase] = useState<Phase>("intro");
+
   const initial = useMemo(() => {
     const round = pickStartingNine(images, 9) as QuizImage[];
     const roundIds = new Set(round.map((i) => i.id));
@@ -29,7 +36,7 @@ export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
   const [collection, setCollection] = useState<QuizImage[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [roundNumber, setRoundNumber] = useState(1);
-  const [finished, setFinished] = useState(false);
+  const [history, setHistory] = useState<StoredQuizRound[]>([]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -50,9 +57,29 @@ export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
     const newCollection = [...collection, ...chosen];
 
     if (pool.length === 0) {
+      const finalHistory: StoredQuizRound[] = [
+        ...history,
+        {
+          round: roundNumber,
+          images: currentRound.map((i) => ({
+            id: i.id,
+            url: i.url,
+            title: i.title,
+            artist: i.artist ?? null,
+            date: i.date ?? null,
+            color: i.color ?? null,
+            medium: i.medium ?? null,
+            subject_matter: i.subject_matter ?? null,
+          })),
+          chosenIds: chosen.map((i) => i.id),
+          basisIds: [],
+        },
+      ];
+      setHistory(finalHistory);
+      saveQuizSession({ rounds: finalHistory });
       setCollection(newCollection);
       setCurrentRound([]);
-      setFinished(true);
+      setPhase("finished");
       return;
     }
 
@@ -63,6 +90,27 @@ export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
     const nextIds = new Set(nextRound.map((i) => i.id));
     const nextPool = pool.filter((i) => !nextIds.has(i.id));
 
+    const updatedHistory: StoredQuizRound[] = [
+      ...history,
+      {
+        round: roundNumber,
+        images: currentRound.map((i) => ({
+          id: i.id,
+          url: i.url,
+          title: i.title,
+          artist: i.artist ?? null,
+          date: i.date ?? null,
+          color: i.color ?? null,
+          medium: i.medium ?? null,
+          subject_matter: i.subject_matter ?? null,
+        })),
+        chosenIds: chosen.map((i) => i.id),
+        basisIds: basis.map((i) => i.id),
+      },
+    ];
+    setHistory(updatedHistory);
+    saveQuizSession({ rounds: updatedHistory });
+
     setCollection(newCollection);
     setPool(nextPool);
     setCurrentRound(nextRound);
@@ -71,7 +119,7 @@ export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
     setRoundNumber((n) => n + 1);
 
     if (nextRound.length === 0) {
-      setFinished(true);
+      setPhase("finished");
     }
   }
 
@@ -104,7 +152,33 @@ export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
     setFilters(emptyFilters());
   }
 
-  if (finished) {
+  // ---------- intro ----------
+  if (phase === "intro") {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center px-6">
+        <div className="max-w-md text-center">
+          <h1 className="text-2xl mb-4">Build your collection</h1>
+          <p className="text-sm text-gray-500 mb-2">
+            You'll see 9 images at a time. Choose as many as you like — anything
+            you don't pick won't come back around.
+          </p>
+          <p className="text-sm text-gray-500 mb-8">
+            Each new set is chosen based on what you kept, so the collection
+            narrows in on your taste as you go. It ends once the images run out.
+          </p>
+          <button
+            onClick={() => setPhase("playing")}
+            className="border px-6 py-2 text-sm hover:bg-gray-50"
+          >
+            Start
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ---------- finished ----------
+  if (phase === "finished") {
     const summary = summarizeCollection(collection);
     const visibleCollection = applyFilters(collection, filters);
 
@@ -153,10 +227,13 @@ export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
             ))}
           </div>
         )}
+
+        <QuizPathPreview />
       </div>
     );
   }
 
+  // ---------- playing ----------
   const metaLine2 = [hovered?.artist, hovered?.date].filter(Boolean).join(", ");
   const metaLine3 = [hovered?.medium, hovered?.color, hovered?.subject_matter]
     .filter(Boolean)
@@ -214,15 +291,14 @@ export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
               alt={img.title ?? ""}
               className="w-full h-full object-cover"
             />
-            <span className="absolute bottom-0 left-0 right-0 bg-white/90 text-[10px] text-gray-600 px-1.5 py-0.5 truncate">
-              {img.title ?? "Untitled"}
-            </span>
           </button>
         ))}
         {Array.from({ length: Math.max(0, 9 - currentRound.length) }).map((_, i) => (
           <div key={`pad-${i}`} className="bg-gray-50" />
         ))}
       </div>
+
+      <QuizPathPreview />
     </div>
   );
 }

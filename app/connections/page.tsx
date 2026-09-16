@@ -1,15 +1,20 @@
 // app/connections/page.tsx
 import { Suspense } from "react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import ConnectionGraph from "@/components/connection-graph";
-import PopularCombo from "@/components/popular-combo";
-import { buildGraph, layoutGraph, getMostPopularCombo } from "@/lib/graph-layout";
+import ConnectionsView from "@/components/connections-view";
+import { buildGraph, layoutGraph } from "@/lib/graph-layout";
 
 export default function ConnectionsPage() {
   return (
     <div className="fixed inset-0 flex flex-col">
       <div className="px-4 py-2 border-b flex items-center justify-between shrink-0">
-        <h1 className="text-sm font-medium">Connections — color, medium, subject</h1>
+        <div className="flex items-center gap-4">
+          <h1 className="text-sm font-medium">Connections</h1>
+          <Link href="/" className="text-xs underline text-gray-400">
+            back to quiz
+          </Link>
+        </div>
         <p className="text-xs text-gray-400">scroll to zoom · drag to pan</p>
       </div>
       <div className="flex-1 min-h-0">
@@ -62,14 +67,13 @@ async function ConnectionsGraphLoader() {
   const images = (imageLinks?.map((l) => l.images).filter(Boolean) ?? []) as any[];
   const { nodes, edges } = buildGraph(images);
   const layout = layoutGraph(nodes, edges);
-  const popular = getMostPopularCombo(images, 9);
 
   return (
-    <div className="h-full flex flex-col">
-      <PopularCombo items={popular} />
-      <div className="flex-1 min-h-0">
-        <ConnectionGraph nodes={layout.nodes} edges={edges} width={layout.width} height={layout.height} />
-      </div>
-    </div>
+    <ConnectionsView
+      defaultNodes={layout.nodes}
+      defaultEdges={edges}
+      defaultWidth={layout.width}
+      defaultHeight={layout.height}
+    />
   );
 }

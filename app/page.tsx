@@ -5,9 +5,18 @@ import CollectionQuiz from "@/components/collection-quiz";
 
 export default function Home() {
   return (
-    <Suspense fallback={<p className="text-sm text-gray-400 px-6 py-10">Loading quiz...</p>}>
+    <Suspense fallback={<LoadingScreen />}>
       <QuizLoader />
     </Suspense>
+  );
+}
+
+function LoadingScreen() {
+  return (
+    <div className="fixed inset-0 flex flex-col items-center justify-center gap-3">
+      <div className="w-6 h-6 border-2 border-gray-300 border-t-black rounded-full animate-spin" />
+      <p className="text-sm text-gray-400">Loading images...</p>
+    </div>
   );
 }
 
