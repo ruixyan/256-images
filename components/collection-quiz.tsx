@@ -11,6 +11,7 @@ import { createFolderWithImages } from "@/lib/actions/folders";
 import { saveQuizResult } from "@/lib/actions/quiz-results";
 import CollectionBreakdown from "@/components/collection-breakdown";
 import QuizPathPreview from "@/components/quiz-path-preview";
+import StarProgress from "@/components/star-progress";
 import type { ImageInput } from "@/lib/graph-layout";
 
 type QuizImage = ImageInput & {
@@ -27,6 +28,7 @@ export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
   const [phase, setPhase] = useState<Phase>("intro");
   const [name, setName] = useState("");
   const totalImages = images.length;
+  const totalRounds = Math.max(1, Math.ceil(totalImages / 9));
 
   const initial = useMemo(() => {
     const round = pickStartingNine(images, 9) as QuizImage[];
@@ -53,11 +55,6 @@ export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
 
   const hovered = currentRound.find((img) => img.id === hoveredId) ?? null;
 
-  const seenCount = Math.min(totalImages, totalImages - pool.length);
-  const progressPct = totalImages > 0 ? Math.round((seenCount / totalImages) * 100) : 0;
-
-  // Auto-save the result to the database the moment the quiz finishes —
-  // guarded so it only ever fires once per playthrough, even across re-renders.
   useEffect(() => {
     if (phase !== "finished" || resultSaveStarted.current) return;
     resultSaveStarted.current = true;
@@ -181,7 +178,7 @@ export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
     return (
       <div className="fixed inset-0 flex items-center justify-center px-6">
         <div className="max-w-md text-center">
-          <h1 className="text-2xl mb-4">welcome to rachel's archive</h1>
+          <h1 className="text-2xl mb-4">Build your collection</h1>
           <p className="text-sm text-gray-500 mb-2">
             You'll see 9 images at a time. Choose as many as you like — anything
             you don't pick won't come back around.
@@ -195,7 +192,7 @@ export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="enter a nickname"
+            placeholder="Your name"
             className="w-full border-b py-2 text-sm text-center mb-6 focus:outline-none"
           />
           <button
@@ -203,7 +200,7 @@ export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
             disabled={!name.trim()}
             className="border px-6 py-2 text-sm hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            let's start!
+            Start
           </button>
         </div>
       </div>
@@ -283,82 +280,70 @@ export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
     .filter(Boolean)
     .join(" · ");
 
-  return (
-    <div className="fixed inset-0 flex">
-      <div className="w-1/3 border-r flex flex-col p-8 overflow-y-auto">
-        <div>
-          <h1 className="text-2xl mb-4">Round {roundNumber}</h1>
-          <p className="text-sm text-gray-500 mb-6">
-            Choose any images you'd like to keep. Whatever you don't pick this round won't come back —
-            the next round is built from what you choose now.
-          </p>
-
-          <div className="mb-6">
-            <div className="flex justify-between text-xs text-gray-400 mb-1.5">
-              <span>{seenCount} of {totalImages} seen</span>
-              <span>{progressPct}%</span>
-            </div>
-            <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-green-600 rounded-full transition-all duration-500 ease-out"
-                style={{ width: `${progressPct}%` }}
-              />
-            </div>
+    return (
+      <div className="fixed inset-0 flex">
+        <div className="w-1/3 border-r flex flex-col p-8 overflow-y-auto">
+          <div>
+            <p className="text-sm text-gray-500 mb-6">
+              Choose any images you'd like to keep. Whatever you don't pick this round won't come back —
+              the next round is built from what you choose now.
+            </p>
+  
+            <p className="text-xs text-gray-400">{selected.size} selected this round</p>
           </div>
-
-          <p className="text-xs text-gray-400">{selected.size} selected this round</p>
-          <p className="text-xs text-gray-400">{collection.length} kept so far</p>
-          <p className="text-xs text-gray-400">{pool.length} remaining after this round</p>
-        </div>
-
-        {hovered && (
+  
           <div className="mt-6 pt-6 border-t">
-            <div className="w-full aspect-square border border-gray-700 mb-3 flex items-center justify-center overflow-hidden">
-              <img
-                src={hovered.url}
-                alt={hovered.title ?? ""}
-                className="max-w-full max-h-full object-contain"
-              />
-            </div>
-            <p className="text-sm font-medium leading-snug">{hovered.title || "Untitled"}</p>
-            {metaLine2 && <p className="text-xs text-gray-500 leading-snug">{metaLine2}</p>}
-            {metaLine3 && <p className="text-xs text-gray-400 leading-snug">{metaLine3}</p>}
+            <StarProgress totalRounds={totalRounds} currentRound={roundNumber} />
           </div>
-        )}
-
-        <button
-          onClick={handleContinue}
-          className="border px-4 py-2 text-sm hover:bg-gray-50 self-end mt-auto pt-6"
-        >
-          Continue
-        </button>
-      </div>
-
-      <div className="w-2/3 h-full grid grid-cols-3 grid-rows-3 gap-2 p-2">
-        {currentRound.map((img) => (
+  
+          {hovered && (
+            <div className="mt-6 pt-6 border-t">
+              <div className="w-full aspect-square border border-gray-700 mb-3 flex items-center justify-center overflow-hidden">
+                <img
+                  src={hovered.url}
+                  alt={hovered.title ?? ""}
+                  className="max-w-full max-h-full object-contain"
+                />
+              </div>
+              <p className="text-sm font-medium leading-snug">{hovered.title || "Untitled"}</p>
+              {metaLine2 && <p className="text-xs text-gray-500 leading-snug">{metaLine2}</p>}
+              {metaLine3 && <p className="text-xs text-gray-400 leading-snug">{metaLine3}</p>}
+            </div>
+          )}
+  
           <button
-            type="button"
-            key={img.id}
-            onClick={() => toggle(img.id)}
-            onMouseEnter={() => setHoveredId(img.id)}
-            onMouseLeave={() => setHoveredId((cur) => (cur === img.id ? null : cur))}
-            className={`relative overflow-hidden text-left border-2 ${
-              selected.has(img.id) ? "border-green-600" : "border-transparent"
-            }`}
+            onClick={handleContinue}
+            className="border px-4 py-2 text-sm hover:bg-gray-50 self-end mt-auto pt-6"
           >
-            <img
-              src={img.url}
-              alt={img.title ?? ""}
-              className="w-full h-full object-cover"
-            />
+            Continue
           </button>
-        ))}
-        {Array.from({ length: Math.max(0, 9 - currentRound.length) }).map((_, i) => (
-          <div key={`pad-${i}`} className="bg-gray-50" />
-        ))}
+        </div>
+  
+        <div className="w-2/3 h-full grid grid-cols-3 grid-rows-3 gap-2 p-2">
+          {currentRound.map((img) => (
+            <button
+              type="button"
+              key={img.id}
+              onClick={() => toggle(img.id)}
+              onMouseEnter={() => setHoveredId(img.id)}
+              onMouseLeave={() => setHoveredId((cur) => (cur === img.id ? null : cur))}
+              className={`relative overflow-hidden text-left border-2 ${
+                selected.has(img.id) ? "border-green-600" : "border-transparent"
+              }`}
+            >
+              <img
+                src={img.url}
+                alt={img.title ?? ""}
+                className="w-full h-full object-cover"
+              />
+            </button>
+          ))}
+          {Array.from({ length: Math.max(0, 9 - currentRound.length) }).map((_, i) => (
+            <div key={`pad-${i}`} className="bg-gray-50" />
+          ))}
+        </div>
+  
+        <QuizPathPreview />
       </div>
-
-      <QuizPathPreview />
-    </div>
-  );
-}
+    );
+  }
