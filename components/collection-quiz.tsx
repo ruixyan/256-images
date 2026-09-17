@@ -1,12 +1,14 @@
 // components/collection-quiz.tsx
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { pickStartingNine, pickSimilarNine, summarizeCollection, emptyFilters, applyFilters } from "@/lib/quiz";
 import type { CollectionFilters, FilterField } from "@/lib/quiz";
 import { saveQuizSession } from "@/lib/quiz-graph";
 import type { StoredQuizRound } from "@/lib/quiz-graph";
 import { createFolderWithImages } from "@/lib/actions/folders";
+import { saveQuizResult } from "@/lib/actions/quiz-results";
 import CollectionBreakdown from "@/components/collection-breakdown";
 import QuizPathPreview from "@/components/quiz-path-preview";
 import type { ImageInput } from "@/lib/graph-layout";
@@ -23,6 +25,7 @@ type Phase = "intro" | "playing" | "finished";
 
 export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
   const [phase, setPhase] = useState<Phase>("intro");
+  const [name, setName] = useState("");
   const totalImages = images.length;
 
   const initial = useMemo(() => {
@@ -43,15 +46,27 @@ export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [filters, setFilters] = useState<CollectionFilters>(emptyFilters());
 
+  const [participantId, setParticipantId] = useState<string | null>(null);
+  const [resultSaving, setResultSaving] = useState(false);
+  const [resultError, setResultError] = useState<string | null>(null);
+  const resultSaveStarted = useRef(false);
+
   const hovered = currentRound.find((img) => img.id === hoveredId) ?? null;
 
-  // How many of the total images have been shown so far, across every
-  // completed round plus the round currently on screen.
-  const seenCount = Math.min(
-    totalImages,
-    totalImages - pool.length
-  );
+  const seenCount = Math.min(totalImages, totalImages - pool.length);
   const progressPct = totalImages > 0 ? Math.round((seenCount / totalImages) * 100) : 0;
+
+  // Auto-save the result to the database the moment the quiz finishes —
+  // guarded so it only ever fires once per playthrough, even across re-renders.
+  useEffect(() => {
+    if (phase !== "finished" || resultSaveStarted.current) return;
+    resultSaveStarted.current = true;
+    setResultSaving(true);
+    saveQuizResult(name, collection.map((img) => img.id))
+      .then((id) => setParticipantId(id))
+      .catch((err) => setResultError(err?.message ?? "Failed to save your result"))
+      .finally(() => setResultSaving(false));
+  }, [phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function toggle(id: string) {
     setSelected((prev) => {
@@ -134,9 +149,9 @@ export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
 
   async function handleSave(formData: FormData) {
     setSaving(true);
-    const name = (formData.get("name") as string) || "My collection";
+    const folderName = (formData.get("name") as string) || "My collection";
     const fd = new FormData();
-    fd.set("name", name);
+    fd.set("name", folderName);
     collection.forEach((img) => fd.append("imageIds", img.id));
     await createFolderWithImages(fd);
     setSaving(false);
@@ -173,11 +188,20 @@ export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
           </p>
           <p className="text-sm text-gray-500 mb-8">
             Each new set is chosen based on what you kept, so the collection
-            narrows in on your taste as you go. It ends once the images run out.
+            narrows in on your taste as you go. When you finish, you can see
+            how your picks compare to everyone else's.
           </p>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Your name"
+            className="w-full border-b py-2 text-sm text-center mb-6 focus:outline-none"
+          />
           <button
-            onClick={() => setPhase("playing")}
-            className="border px-6 py-2 text-sm hover:bg-gray-50"
+            onClick={() => name.trim() && setPhase("playing")}
+            disabled={!name.trim()}
+            className="border px-6 py-2 text-sm hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Start
           </button>
@@ -193,7 +217,18 @@ export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
 
     return (
       <div className="w-full px-6 py-10">
-        <h1 className="text-lg mb-2">Your collection</h1>
+        <div className="flex items-center justify-between mb-2">
+          <h1 className="text-lg">Your collection</h1>
+          <div className="text-xs">
+            {resultSaving && <span className="text-gray-400">Saving your result...</span>}
+            {resultError && <span className="text-red-500">{resultError}</span>}
+            {participantId && (
+              <Link href={`/results/${participantId}`} className="underline text-green-700">
+                compare with everyone else
+              </Link>
+            )}
+          </div>
+        </div>
         <p className="text-xs text-gray-400 mb-6">
           {collection.length} image{collection.length === 1 ? "" : "s"} chosen
         </p>
@@ -278,11 +313,13 @@ export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
 
         {hovered && (
           <div className="mt-6 pt-6 border-t">
-            <img
-              src={hovered.url}
-              alt={hovered.title ?? ""}
-              className="w-full max-h-56 object-contain mb-3 border border-gray-700"
-            />
+            <div className="w-full aspect-square border border-gray-700 mb-3 flex items-center justify-center overflow-hidden">
+              <img
+                src={hovered.url}
+                alt={hovered.title ?? ""}
+                className="max-w-full max-h-full object-contain"
+              />
+            </div>
             <p className="text-sm font-medium leading-snug">{hovered.title || "Untitled"}</p>
             {metaLine2 && <p className="text-xs text-gray-500 leading-snug">{metaLine2}</p>}
             {metaLine3 && <p className="text-xs text-gray-400 leading-snug">{metaLine3}</p>}
@@ -291,7 +328,7 @@ export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
 
         <button
           onClick={handleContinue}
-          className="border px-4 py-2 text-sm hover:bg-gray-50 self-start mt-auto pt-6"
+          className="border px-4 py-2 text-sm hover:bg-gray-50 self-end mt-auto pt-6"
         >
           Continue
         </button>
