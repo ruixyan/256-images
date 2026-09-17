@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280" width="200" height="280">
+  <defs>
+    <filter id="rough" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="7" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="9" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+
+  <g transform="translate(100,140) scale(1,1.4) translate(-100,-100)">
+    <polygon
+      filter="url(#rough)"
+      fill="white"
+      points="
+        100,12
+        118,58
+        172,38
+        138,88
+        188,112
+        132,122
+        148,178
+        100,142
+        68,186
+        62,130
+        10,140
+        52,96
+        8,58
+        70,70
+      "
+    />
+  </g>
+</svg>

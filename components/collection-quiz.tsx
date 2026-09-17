@@ -181,7 +181,7 @@ export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
     return (
       <div className="fixed inset-0 flex items-center justify-center px-6">
         <div className="max-w-md text-center">
-          <h1 className="text-2xl mb-4">Build your collection</h1>
+          <h1 className="text-2xl mb-4">welcome to rachel's archive</h1>
           <p className="text-sm text-gray-500 mb-2">
             You'll see 9 images at a time. Choose as many as you like — anything
             you don't pick won't come back around.
@@ -195,7 +195,7 @@ export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Your name"
+            placeholder="enter a nickname"
             className="w-full border-b py-2 text-sm text-center mb-6 focus:outline-none"
           />
           <button
@@ -203,7 +203,7 @@ export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
             disabled={!name.trim()}
             className="border px-6 py-2 text-sm hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            Start
+            let's start!
           </button>
         </div>
       </div>
