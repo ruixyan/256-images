@@ -1,4 +1,3 @@
-// app/connections/page.tsx
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import ConnectionsView from "@/components/connections-view";
@@ -32,7 +31,8 @@ async function ConnectionsLoader() {
     return (
       <div className="w-full h-full flex items-center justify-center px-6 text-center">
         <p className="text-sm text-gray-400">
-          No "art" folder found yet — create one and this page will show its connections.
+          No "art" folder found yet — create one and this page will show its
+          connections.
         </p>
       </div>
     );
@@ -40,7 +40,9 @@ async function ConnectionsLoader() {
 
   const { data: imageLinks, error } = await supabase
     .from("image_folders")
-    .select("images(id, url, title, artist, date, color, medium, subject_matter)")
+    .select(
+      "images(id, url, title, artist, date, color, medium, subject_matter)"
+    )
     .eq("folder_id", artFolder.id);
 
   if (error) {
@@ -51,7 +53,8 @@ async function ConnectionsLoader() {
     );
   }
 
-  const images = (imageLinks?.map((l) => l.images).filter(Boolean) ?? []) as any[];
+  const images =
+    (imageLinks?.map((link) => link.images).filter(Boolean) ?? []) as any[];
 
   return <ConnectionsView allImages={images} />;
 }
