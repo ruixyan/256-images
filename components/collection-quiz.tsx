@@ -167,21 +167,16 @@ export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
     return (
       <div className="fixed inset-0 flex items-center justify-center px-6">
         <div className="max-w-md text-center">
-          <h1 className="text-2xl mb-4">Build your collection</h1>
+          <h1 className="text-2xl mb-4">welcome to rachel's art archive</h1>
           <p className="text-sm text-gray-500 mb-2">
-            You'll see 9 images at a time. Choose as many as you like — anything
-            you don't pick won't come back around.
-          </p>
-          <p className="text-sm text-gray-500 mb-8">
-            Each new set is chosen based on what you kept, so the collection
-            narrows in on your taste as you go. When you finish, you can see
-            how your picks compare to everyone else's.
+            you'll be presented with 9 pieces of art. choose whatever your heart desires!
+           just know that all your choices are final...
           </p>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Your name"
+            placeholder="enter a nickname"
             className="w-full border-b py-2 text-sm text-center mb-6 focus:outline-none"
           />
           <button
