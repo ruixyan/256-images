@@ -28,7 +28,7 @@ async function ResultsLoader() {
 
   const { data: selections, error: sErr } = await supabase
     .from("quiz_selections")
-    .select("image_id, images(id, url, title, artist, date, color, medium, subject_matter)");
+    .select("participant_id, image_id, images(id, url, title, artist, date, color, medium, subject_matter)");
 
   if (sErr) {
     return <p className="text-sm text-red-500 px-6 py-10">Error loading selections: {sErr.message}</p>;
@@ -47,21 +47,79 @@ async function ResultsLoader() {
   const summary = summarizeCollection(allSelectedImages);
   const totalParticipants = participants?.length ?? 0;
 
-  // Scattered, deterministic star placement for participants — same seed
-  // per index every render, so positions don't jump around on refresh.
+  const picksByParticipant = new Map<string, Set<string>>();
+  for (const s of selections ?? []) {
+    if (!s.participant_id) continue;
+    const set = picksByParticipant.get(s.participant_id) ?? new Set<string>();
+    set.add(s.image_id);
+    picksByParticipant.set(s.participant_id, set);
+  }
+
   const rand = seededRandom(7);
-  const rows = Math.max(1, Math.ceil((totalParticipants || 1) / 6));
-  const fieldHeight = rows * 150 + 60;
-  const starPositions = (participants ?? []).map((p, i) => ({
+  const rawPositions = (participants ?? []).map((p, i) => ({
     participant: p,
-    x: 6 + rand() * 88, // percent
-    y: 6 + rand() * 88, // percent within the field
+    x: 10 + rand() * 80, // percent
+    y: 10 + rand() * 80, // percent
     seed: i * 13 + 5,
   }));
 
+  // Push apart any two stars closer than MIN_DIST (in the same 0-100
+  // percent space as x/y) — same repeated-pass technique used for the
+  // node layout elsewhere in the app, run until nothing overlaps or a
+  // pass cap is hit, whichever comes first.
+  const MIN_DIST = 16;
+  for (let pass = 0; pass < 200; pass++) {
+    let moved = false;
+    for (let i = 0; i < rawPositions.length; i++) {
+      for (let j = i + 1; j < rawPositions.length; j++) {
+        const a = rawPositions[i], b = rawPositions[j];
+        let dx = a.x - b.x, dy = a.y - b.y;
+        let dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist === 0) { dx = Math.random() - 0.5; dy = Math.random() - 0.5; dist = 0.01; }
+        if (dist < MIN_DIST) {
+          moved = true;
+          const push = (MIN_DIST - dist) / 2;
+          dx = (dx / dist) * push; dy = (dy / dist) * push;
+          a.x += dx; a.y += dy;
+          b.x -= dx; b.y -= dy;
+        }
+      }
+    }
+    if (!moved) break;
+  }
+
+  const starPositions = rawPositions.map((p) => ({
+    ...p,
+    x: Math.max(6, Math.min(94, p.x)),
+    y: Math.max(6, Math.min(94, p.y)),
+  }));
+  const posById = new Map(starPositions.map((s) => [s.participant.id, s]));
+
+  const ids = [...picksByParticipant.keys()];
+  const rawConnections: { aId: string; bId: string; score: number }[] = [];
+  for (let i = 0; i < ids.length; i++) {
+    for (let j = i + 1; j < ids.length; j++) {
+      const setA = picksByParticipant.get(ids[i])!;
+      const setB = picksByParticipant.get(ids[j])!;
+      if (setA.size === 0 || setB.size === 0) continue;
+      let shared = 0;
+      for (const id of setA) if (setB.has(id)) shared++;
+      if (shared === 0) continue;
+      const score = shared / Math.min(setA.size, setB.size);
+      rawConnections.push({ aId: ids[i], bId: ids[j], score });
+    }
+  }
+  const maxScore = Math.max(0, ...rawConnections.map((c) => c.score));
+  const connections = rawConnections
+    .filter((c) => posById.has(c.aId) && posById.has(c.bId))
+    .map((c) => ({
+      a: posById.get(c.aId)!,
+      b: posById.get(c.bId)!,
+      strength: maxScore > 0 ? c.score / maxScore : 0,
+    }));
+
   return (
     <div>
-      {/* Fits within one viewport — header + categories + top images */}
       <div className="h-screen flex flex-col px-6 py-10">
         <div className="flex items-center justify-between mb-1 shrink-0">
           <h1 className="text-lg">Results</h1>
@@ -128,30 +186,56 @@ async function ResultsLoader() {
         </div>
       </div>
 
-      {/* Below the fold — scroll down to see who's played */}
-      <div className="px-6 py-10 border-t">
-        <h2 className="text-sm font-medium mb-4">Everyone who's played</h2>
+      <div className="h-screen flex flex-col px-6 py-10 border-t">
+        <h2 className="text-sm font-medium mb-4 shrink-0">Everyone who's played</h2>
         {starPositions.length === 0 ? (
           <p className="text-sm text-gray-400">No one yet.</p>
         ) : (
-          <div className="relative w-full" style={{ height: fieldHeight }}>
+          <div className="relative flex-1 min-h-0 w-full">
+            <svg
+              className="absolute inset-0 w-full h-full pointer-events-none"
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+            >
+              {connections.map((c, i) => (
+                <line
+                  key={i}
+                  x1={c.a.x} y1={c.a.y} x2={c.b.x} y2={c.b.y}
+                  stroke="#ffffff"
+                  strokeOpacity={0.12 + 0.75 * c.strength}
+                  strokeWidth={0.15 + 0.5 * c.strength}
+                  vectorEffect="non-scaling-stroke"
+                />
+              ))}
+            </svg>
+
             {starPositions.map(({ participant, x, y, seed }) => (
-              <div
-                key={participant.id}
-                className="absolute flex flex-col items-center w-20 -translate-x-1/2"
-                style={{ left: `${x}%`, top: `${y}%` }}
-              >
-                <Link href={`/results/${participant.id}`}>
-                  <svg viewBox="0 0 40 40" width={40} height={40} className="hover:opacity-70 transition-opacity">
+              <div key={participant.id} className="absolute" style={{ left: `${x}%`, top: `${y}%` }}>
+                {/* Star icon — centered exactly on the (x%, y%) point, which is
+                    also exactly where the connection lines above terminate. */}
+                <Link
+                  href={`/results/${participant.id}`}
+                  className="absolute block hover:opacity-70 transition-opacity"
+                  style={{ transform: "translate(-50%, -50%)" }}
+                >
+                  <svg viewBox="0 0 40 40" width={40} height={40}>
                     <polygon points={starPoints(20, 20, 18, 7.5, 6, seed)} fill="#ffffff" />
                   </svg>
                 </Link>
-                <p className="text-xs text-gray-300 mt-1 text-center truncate w-full">{participant.name}</p>
-                <form action={deleteQuizParticipant.bind(null, participant.id)}>
-                  <button type="submit" className="text-[10px] text-gray-500 hover:text-red-500 underline">
-                    delete
-                  </button>
-                </form>
+
+                {/* Label + delete — positioned separately below the star,
+                    so it doesn't shift the star's own anchor point. */}
+                <div
+                  className="absolute flex flex-col items-center w-20"
+                  style={{ transform: "translate(-50%, 26px)" }}
+                >
+                  <p className="text-xs text-gray-300 text-center truncate w-full">{participant.name}</p>
+                  <form action={deleteQuizParticipant.bind(null, participant.id)}>
+                    <button type="submit" className="text-[10px] text-gray-500 hover:text-red-500 underline">
+                      delete
+                    </button>
+                  </form>
+                </div>
               </div>
             ))}
           </div>

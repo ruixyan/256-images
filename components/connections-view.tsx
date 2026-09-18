@@ -65,7 +65,7 @@ export default function ConnectionsView({ allImages }: { allImages: GalleryImage
         </div>
 
         <div className="flex items-center gap-1 px-4 border-r border-white/15 h-full">
-          <button
+          {/* <button
             onClick={() => setMode("quiz")}
             className={`px-3 py-1.5 rounded-full transition-colors ${
               mode === "quiz" ? "bg-white text-black" : "text-gray-300 hover:bg-white/10"
@@ -87,7 +87,7 @@ export default function ConnectionsView({ allImages }: { allImages: GalleryImage
           >
             full collection
             {!completed && <span className="text-[10px]">🔒</span>}
-          </button>
+          </button> */}
         </div>
 
         {mode === "quiz" && (

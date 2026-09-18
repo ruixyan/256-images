@@ -5,9 +5,18 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { QuizNode, QuizEdge } from "@/lib/quiz-graph";
 import { starPoints, starfield } from "@/lib/star-shape";
 
-const OUTER_R = 32;
-const INNER_R = 13;
+const OUTER_R = 22;
+const INNER_R = 9;
 const LABEL_SPACE = 30;
+
+// Padding reserved around the drawing area on every side — must match the
+// actual padding applied to the content wrapper below, since the scale
+// calculation needs to know the REAL available space, not the outer
+// container's raw size.
+const PAD_TOP = 56;   // pt-14
+const PAD_LEFT = 24;  // pl-6
+const PAD_RIGHT = 24; // pr-6
+const PAD_BOTTOM = 24; // pb-6
 
 function nodeSeed(id: string) {
   let h = 0;
@@ -60,17 +69,11 @@ function StarGlyph({
   );
 }
 
-// Everything here is rendered once and never touched again on hover — its
-// props (nodes/edges/scale/bg/roundLabels/onEnter) don't change when the
-// parent's hoveredId state changes, so React.memo means this subtree simply
-// doesn't re-render on hover at all, no matter how large the collection is.
 const BaseLayer = memo(function BaseLayer({
-  nodes, edges, width, totalHeight, scale, bg, roundLabels, onEnter, onLeave,
+  nodes, edges, scale, bg, roundLabels, onEnter, onLeave,
 }: {
   nodes: QuizNode[];
   edges: QuizEdge[];
-  width: number;
-  totalHeight: number;
   scale: number;
   bg: { x: number; y: number; r: number; opacity: number }[];
   roundLabels: [number, number][];
@@ -90,7 +93,7 @@ const BaseLayer = memo(function BaseLayer({
           x={x}
           y={-LABEL_SPACE / 2 + 5}
           textAnchor="middle"
-          fontSize={11}
+          fontSize={10}
           fontFamily="ui-monospace, monospace"
           fill="#ffffff"
           fillOpacity={0.7}
@@ -120,9 +123,6 @@ const BaseLayer = memo(function BaseLayer({
   );
 });
 
-// Small, bounded-size layer redrawn on every hover: a dimming rect plus just
-// the hovered star and whatever it's directly connected to — never the
-// whole collection, so its cost stays flat regardless of graph size.
 function HighlightOverlay({
   hoveredId, nodeById, connectedNodesOf, edgeTouching, edges, width, totalHeight, scale,
 }: {
@@ -189,7 +189,13 @@ export default function QuizPathGraph({
       const entry = entries[0];
       if (!entry) return;
       const { width: cw, height: ch } = entry.contentRect;
-      const nextScale = Math.min(1, cw / width, ch / totalHeight);
+      // Subtract the actual padding reserved around the drawing area —
+      // this is the fix: previously the raw container size was used,
+      // which doesn't account for pt-14/pl-6/etc, so the graph rendered
+      // slightly larger than the truly visible space and got clipped.
+      const availW = Math.max(0, cw - PAD_LEFT - PAD_RIGHT);
+      const availH = Math.max(0, ch - PAD_TOP - PAD_BOTTOM);
+      const nextScale = Math.min(1, availW / width, availH / totalHeight);
       setScale(nextScale > 0 ? nextScale : 1);
     });
     observer.observe(el);
@@ -231,7 +237,7 @@ export default function QuizPathGraph({
 
   return (
     <div ref={containerRef} className="relative w-full h-full overflow-hidden bg-[#05070d]">
-      <div className="w-full h-full overflow-auto pt-14 pl-6">
+      <div className="w-full h-full flex items-start justify-start pt-14 pl-6 pr-6 pb-6">
         <svg
           viewBox={`0 -${LABEL_SPACE} ${width} ${totalHeight}`}
           width={width * scale}
@@ -257,8 +263,6 @@ export default function QuizPathGraph({
           <BaseLayer
             nodes={nodes}
             edges={edges}
-            width={width}
-            totalHeight={totalHeight}
             scale={scale}
             bg={bg}
             roundLabels={roundLabels}
@@ -280,7 +284,7 @@ export default function QuizPathGraph({
       </div>
 
       <div
-        className={`absolute top-0 right-0 bottom-0 w-72 bg-black text-white p-4 overflow-y-auto shadow-2xl transition-transform duration-200 ease-out ${
+        className={`absolute top-0 right-0 bottom-0 w-64 bg-black text-white p-4 overflow-y-auto shadow-2xl transition-transform duration-200 ease-out ${
           hovered ? "translate-x-0" : "translate-x-full pointer-events-none"
         }`}
       >
