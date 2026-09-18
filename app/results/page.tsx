@@ -3,7 +3,6 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { summarizeCollection } from "@/lib/quiz";
-import { deleteQuizParticipant } from "@/lib/actions/quiz-results";
 import { starPoints, seededRandom } from "@/lib/star-shape";
 
 export default function ResultsPage() {
@@ -230,11 +229,6 @@ async function ResultsLoader() {
                   style={{ transform: "translate(-50%, 26px)" }}
                 >
                   <p className="text-xs text-gray-300 text-center truncate w-full">{participant.name}</p>
-                  <form action={deleteQuizParticipant.bind(null, participant.id)}>
-                    <button type="submit" className="text-[10px] text-gray-500 hover:text-red-500 underline">
-                      delete
-                    </button>
-                  </form>
                 </div>
               </div>
             ))}
