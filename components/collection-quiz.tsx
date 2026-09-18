@@ -65,6 +65,7 @@ export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
       .finally(() => setResultSaving(false));
   }, [phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
+
   function toggle(id: string) {
     setSelected((prev) => {
       const next = new Set(prev);
@@ -167,10 +168,11 @@ export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
     return (
       <div className="fixed inset-0 flex items-center justify-center px-6">
         <div className="max-w-md text-center">
-          <h1 className="text-2xl mb-4">welcome to rachel's art archive</h1>
+          <h1 className="text-2xl mb-4">welcome to rachel's art archive <br></br></h1>
           <p className="text-sm text-gray-500 mb-2">
-            you'll be presented with 9 pieces of art. choose whatever your heart desires!
-           just know that all your choices are final...
+            i've picked a selection of art that intrigued me, one
+            way or another. now it's your turn! you'll be presented with 9 pieces of art at a time. choose whatever your heart desires!
+           just know that all your choices are final...<br></br>
           </p>
           <input
             type="text"
@@ -276,8 +278,8 @@ export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
         <div>
           <div className="flex items-start justify-between gap-3 mb-6">
             <p className="text-sm text-gray-500">
-              Choose any images you'd like to keep. Whatever you don't pick this round won't come back —
-              the next round is built from what you choose now.
+              choose any images you'd like to keep! <br></br> keep in mind that your chosen images 
+              will affect the images presented in the next round.
             </p>
             <QuizPathPreview />
           </div>
