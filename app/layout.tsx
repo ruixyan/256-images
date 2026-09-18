@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import localFont from "next/font/local";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
 
@@ -13,10 +13,31 @@ export const metadata: Metadata = {
   description: "The fastest way to build apps with Next.js and Supabase",
 };
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const fraktionSans = localFont({
+  src: [
+    {
+      path: "./fonts/PPFraktionSans-Light.otf",
+      weight: "300",
+      style: "normal",
+    },
+    {
+      path: "./fonts/PPFraktionSans-LightItalic.otf",
+      weight: "300",
+      style: "italic",
+    },
+    {
+      path: "./fonts/PPFraktionSans-Bold.otf",
+      weight: "700",
+      style: "normal",
+    },
+    {
+      path: "./fonts/PPFraktionSans-BoldItalic.otf",
+      weight: "700",
+      style: "italic",
+    },
+  ],
+  variable: "--font-fraktion-sans",
   display: "swap",
-  subsets: ["latin"],
 });
 
 export default function RootLayout({
@@ -26,7 +47,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.className} antialiased`}>
+      <body className={`${fraktionSans.className} antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
