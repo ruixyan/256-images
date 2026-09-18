@@ -178,21 +178,20 @@ export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
     return (
       <div className="fixed inset-0 flex items-center justify-center px-6">
         <div className="max-w-md text-center">
-          <h1 className="text-2xl mb-4">Build your collection</h1>
+          <h1 className="text-2xl mb-4">welcome to the star-chive!</h1>
           <p className="text-sm text-gray-500 mb-2">
-            You'll see 9 images at a time. Choose as many as you like — anything
-            you don't pick won't come back around.
+            you will be presented with 9 pieces of art at a time. choose whichever pieces resonate with you, just know that your choices are final...
           </p>
-          <p className="text-sm text-gray-500 mb-8">
+          {/* <p className="text-sm text-gray-500 mb-8">
             Each new set is chosen based on what you kept, so the collection
             narrows in on your taste as you go. When you finish, you can see
             how your picks compare to everyone else's.
-          </p>
+          </p> */}
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Your name"
+            placeholder="enter a nickname"
             className="w-full border-b py-2 text-sm text-center mb-6 focus:outline-none"
           />
           <button
@@ -200,7 +199,7 @@ export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
             disabled={!name.trim()}
             className="border px-6 py-2 text-sm hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            Start
+            start
           </button>
         </div>
       </div>
@@ -220,7 +219,7 @@ export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
             {resultSaving && <span className="text-gray-400">Saving your result...</span>}
             {resultError && <span className="text-red-500">{resultError}</span>}
             {participantId && (
-              <Link href={`/results/${participantId}`} className="underline text-green-700">
+              <Link href={`/results`} className="underline text-green-700">
                 compare with everyone else
               </Link>
             )}
@@ -285,11 +284,10 @@ export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
         <div className="w-1/3 border-r flex flex-col p-8 overflow-y-auto">
           <div>
             <p className="text-sm text-gray-500 mb-6">
-              Choose any images you'd like to keep. Whatever you don't pick this round won't come back —
-              the next round is built from what you choose now.
+              Choose whatever your heart desires :D
             </p>
   
-            <p className="text-xs text-gray-400">{selected.size} selected this round</p>
+            <p className="text-xs text-gray-400">{selected.size} pieces selected</p>
           </div>
   
           <div className="mt-6 pt-6 border-t">
@@ -307,7 +305,6 @@ export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
               </div>
               <p className="text-sm font-medium leading-snug">{hovered.title || "Untitled"}</p>
               {metaLine2 && <p className="text-xs text-gray-500 leading-snug">{metaLine2}</p>}
-              {metaLine3 && <p className="text-xs text-gray-400 leading-snug">{metaLine3}</p>}
             </div>
           )}
   

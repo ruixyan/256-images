@@ -57,16 +57,19 @@ export default function ConnectionsView({ allImages }: { allImages: GalleryImage
 
   return (
     <div className="relative w-full h-full">
-      <div className="absolute top-0 left-0 right-0 z-20 flex items-center gap-4 px-4 py-2 bg-black/85 backdrop-blur-sm text-white text-xs">
-        <span className="font-medium">Connections</span>
-        <Link href="/" className="underline text-gray-300">
-          back to quiz
-        </Link>
+      <div className="absolute top-0 left-0 right-0 z-20 flex items-center bg-black/90 backdrop-blur-sm text-white text-xs h-12 px-4">
+        <div className="flex items-center gap-3 pr-4 border-r border-white/15 h-full">
+          <Link href="/" className="text-gray-400 hover:text-white transition-colors">
+            ← back to quiz
+          </Link>
+        </div>
 
-        <div className="flex gap-1 ml-2">
+        <div className="flex items-center gap-1 px-4 border-r border-white/15 h-full">
           <button
             onClick={() => setMode("quiz")}
-            className={`px-2 py-0.5 rounded ${mode === "quiz" ? "bg-white text-black" : "text-gray-300 hover:bg-white/10"}`}
+            className={`px-3 py-1.5 rounded-full transition-colors ${
+              mode === "quiz" ? "bg-white text-black" : "text-gray-300 hover:bg-white/10"
+            }`}
           >
             your quiz path
           </button>
@@ -74,7 +77,7 @@ export default function ConnectionsView({ allImages }: { allImages: GalleryImage
             onClick={() => completed && setMode("collection")}
             disabled={!completed}
             title={completed ? undefined : "Finish the quiz to unlock this"}
-            className={`px-2 py-0.5 rounded ${
+            className={`px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5 ${
               mode === "collection"
                 ? "bg-white text-black"
                 : completed
@@ -82,17 +85,18 @@ export default function ConnectionsView({ allImages }: { allImages: GalleryImage
                 : "text-gray-600 cursor-not-allowed"
             }`}
           >
-            full collection {!completed && "🔒"}
+            full collection
+            {!completed && <span className="text-[10px]">🔒</span>}
           </button>
         </div>
 
         {mode === "quiz" && (
-          <div className="flex items-center gap-3 ml-2 text-gray-300">
+          <div className="flex items-center gap-4 pl-4 text-gray-400">
             <span className="flex items-center gap-1.5">
-              <span className="inline-block w-3 h-0.5 bg-green-600" /> kept
+              <span className="inline-block w-3 h-0.5 bg-white" /> kept
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="inline-block w-2.5 h-2.5 rounded-full border border-gray-400" /> passed
+              <span className="inline-block w-2.5 h-2.5 rounded-full border border-gray-500" /> passed
             </span>
           </div>
         )}
