@@ -7,11 +7,11 @@ import { pickStartingNine, pickSimilarNine, summarizeCollection, emptyFilters, a
 import type { CollectionFilters, FilterField } from "@/lib/quiz";
 import { saveQuizSession } from "@/lib/quiz-graph";
 import type { StoredQuizRound } from "@/lib/quiz-graph";
-import { createFolderWithImages } from "@/lib/actions/folders";
 import { saveQuizResult } from "@/lib/actions/quiz-results";
 import CollectionBreakdown from "@/components/collection-breakdown";
 import QuizPathPreview from "@/components/quiz-path-preview";
 import StarProgress from "@/components/star-progress";
+import FitGrid from "@/components/fit-grid";
 import type { ImageInput } from "@/lib/graph-layout";
 
 type QuizImage = ImageInput & {
@@ -23,6 +23,7 @@ type QuizImage = ImageInput & {
 };
 
 type Phase = "intro" | "playing" | "finished";
+type GridView = "fit" | "scroll";
 
 export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
   const [phase, setPhase] = useState<Phase>("intro");
@@ -43,10 +44,9 @@ export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [roundNumber, setRoundNumber] = useState(1);
   const [history, setHistory] = useState<StoredQuizRound[]>([]);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [filters, setFilters] = useState<CollectionFilters>(emptyFilters());
+  const [gridView, setGridView] = useState<GridView>("fit");
 
   const [participantId, setParticipantId] = useState<string | null>(null);
   const [resultSaving, setResultSaving] = useState(false);
@@ -144,17 +144,6 @@ export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
     }
   }
 
-  async function handleSave(formData: FormData) {
-    setSaving(true);
-    const folderName = (formData.get("name") as string) || "My collection";
-    const fd = new FormData();
-    fd.set("name", folderName);
-    collection.forEach((img) => fd.append("imageIds", img.id));
-    await createFolderWithImages(fd);
-    setSaving(false);
-    setSaved(true);
-  }
-
   function toggleFilter(field: FilterField, value: string) {
     setFilters((prev) => {
       const next: CollectionFilters = {
@@ -213,61 +202,69 @@ export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
     const visibleCollection = applyFilters(collection, filters);
 
     return (
-      <div className="w-full px-6 py-10">
-        <div className="flex items-center justify-between mb-2">
-          <h1 className="text-lg">Your collection</h1>
-          <div className="text-xs">
+      <div className="fixed inset-0 flex">
+        <div className="w-72 shrink-0 border-r flex flex-col p-6 overflow-y-auto">
+          <CollectionBreakdown
+            summary={summary}
+            filters={filters}
+            onToggle={toggleFilter}
+            onClear={clearFilters}
+            filteredCount={visibleCollection.length}
+          />
+        </div>
+
+        <div className="flex-1 min-w-0 h-full flex flex-col p-8">
+          <div className="flex items-center justify-between mb-1 shrink-0">
+            <h1 className="text-lg">Your collection</h1>
+            <div className="flex gap-1 text-xs">
+              <button
+                onClick={() => setGridView("fit")}
+                className={`px-2 py-1 rounded ${gridView === "fit" ? "bg-white text-black" : "text-gray-400 hover:bg-gray-100"}`}
+              >
+                fit
+              </button>
+              <button
+                onClick={() => setGridView("scroll")}
+                className={`px-2 py-1 rounded ${gridView === "scroll" ? "bg-white text-black" : "text-gray-400 hover:bg-gray-100"}`}
+              >
+                scroll
+              </button>
+            </div>
+          </div>
+          <p className="text-xs text-gray-400 mb-1 shrink-0">
+            {collection.length} image{collection.length === 1 ? "" : "s"} chosen
+          </p>
+          <div className="text-xs mb-4 shrink-0">
             {resultSaving && <span className="text-gray-400">Saving your result...</span>}
             {resultError && <span className="text-red-500">{resultError}</span>}
             {participantId && (
-              <Link href={`/results/${participantId}`} className="underline text-green-700">
+              <Link href="/results" className="underline text-green-700">
                 compare with everyone else
               </Link>
             )}
           </div>
-        </div>
-        <p className="text-xs text-gray-400 mb-6">
-          {collection.length} image{collection.length === 1 ? "" : "s"} chosen
-        </p>
 
-        <CollectionBreakdown
-          summary={summary}
-          filters={filters}
-          onToggle={toggleFilter}
-          onClear={clearFilters}
-          filteredCount={visibleCollection.length}
-        />
-
-        {collection.length > 0 && !saved && (
-          <form action={handleSave} className="flex gap-2 mb-6">
-            <input
-              type="text"
-              name="name"
-              placeholder="Folder name"
-              defaultValue="My collection"
-              className="border-b text-sm py-1 focus:outline-none"
-            />
-            <button type="submit" disabled={saving} className="text-sm border px-3 py-1 hover:bg-gray-50">
-              {saving ? "Saving..." : "Save as folder"}
-            </button>
-          </form>
-        )}
-        {saved && <p className="text-xs text-gray-400 mb-6">Saved as a folder.</p>}
-
-        {collection.length === 0 ? (
-          <p className="text-sm text-gray-400">You didn't keep any images this time.</p>
-        ) : visibleCollection.length === 0 ? (
-          <p className="text-sm text-gray-400">No images match the current filters.</p>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6">
-            {visibleCollection.map((img) => (
-              <div key={img.id}>
-                <img src={img.url} alt={img.title ?? ""} className="w-full h-auto" />
-                <p className="text-xs text-gray-500 mt-1">{img.title ?? "Untitled"}</p>
+          <div className="flex-1 min-h-0">
+            {collection.length === 0 ? (
+              <p className="text-sm text-gray-400">You didn't keep any images this time.</p>
+            ) : visibleCollection.length === 0 ? (
+              <p className="text-sm text-gray-400">No images match the current filters.</p>
+            ) : gridView === "fit" ? (
+              <FitGrid images={visibleCollection} />
+            ) : (
+              <div className="h-full overflow-y-auto">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
+                  {visibleCollection.map((img) => (
+                    <div key={img.id}>
+                      <img src={img.url} alt={img.title ?? ""} className="w-full h-auto" />
+                      <p className="text-xs text-gray-500 mt-1">{img.title ?? "Untitled"}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
+            )}
           </div>
-        )}
+        </div>
       </div>
     );
   }
@@ -283,8 +280,9 @@ export default function CollectionQuiz({ images }: { images: QuizImage[] }) {
       <div className="w-1/3 border-r flex flex-col p-8 overflow-y-auto">
         <div>
           <div className="flex items-start justify-between gap-3 mb-6">
-            <p className="text-sm text-white  ">
-              choose the pieces that resonate with you <br></br>the  most.
+            <p className="text-sm text-gray-500">
+              Choose any images you'd like to keep. Whatever you don't pick this round won't come back —
+              the next round is built from what you choose now.
             </p>
             <QuizPathPreview />
           </div>
